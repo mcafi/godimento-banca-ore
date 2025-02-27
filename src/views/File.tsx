@@ -1,4 +1,5 @@
 import { readFile, writeTextFile } from "@tauri-apps/plugin-fs";
+import { message, save } from "@tauri-apps/plugin-dialog";
 import { XMLParser, XMLBuilder } from "fast-xml-parser";
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
@@ -19,16 +20,19 @@ import { it } from "date-fns/locale/it";
 const File: React.FC = () => {
   const [searchParams] = useSearchParams();
   const path = searchParams.get("path");
-  const filename = searchParams.get("filename");
 
   const [file, setFile] = useState<XmlFile | null>(null);
 
   const [fileCodes, setFileCodes] = useState<Set<string | number>>(new Set());
   const [startDate, setStartDate] = useState<Date | null>(null);
 
+  const [selectedCodes, setSelectedCodes] = useState<Array<string | number>>(
+    []
+  );
+
   async function readExcelFile() {
     try {
-      const fullPath = `${path}\\${filename}`;
+      const fullPath = `${path}`;
       const buffer = await readFile(fullPath);
       const xmlString = new TextDecoder().decode(buffer);
       const xmlParserOptions = {
@@ -37,7 +41,6 @@ const File: React.FC = () => {
       };
       const parser = new XMLParser(xmlParserOptions);
       const result: XmlFile = parser.parse(xmlString);
-      console.log("result", result);
 
       setFile(result);
 
@@ -64,14 +67,13 @@ const File: React.FC = () => {
       });
 
       setFileCodes(codes);
+      setSelectedCodes(Array.from(codes));
 
       if (!startDate) return;
 
       if (getDay(startDate) != 1) {
         setStartDate(addDays(startDate, 8 - getDay(startDate)));
       }
-      console.log(startDate);
-      console.log(getDay(startDate));
     } catch (error) {
       console.error("Errore durante la lettura del file Excel: ", error);
     }
@@ -79,7 +81,7 @@ const File: React.FC = () => {
 
   async function saveXmlFile() {
     try {
-      const fullPath = `${path}\\${filename}`;
+      const fullPath = `${path}`;
       const builder = new XMLBuilder({
         attributeNamePrefix: "@_",
         ignoreAttributes: false,
@@ -116,12 +118,15 @@ const File: React.FC = () => {
 
         for (let j = 0; j < countOfMovimenti; j++) {
           const movimento = movimenti[j];
+
           const date = parse(movimento.Data, "yyyy-MM-dd", new Date());
           const day = getDay(date);
 
           if (!currentStartDate) continue;
 
-          week[day] += movimento.NumOre;
+          if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
+            week[day] += movimento.NumOre;
+          }
 
           if (
             j == countOfMovimenti - 1 ||
@@ -159,8 +164,6 @@ const File: React.FC = () => {
           }
         }
 
-        console.log("newMovimenti", newMovimenti);
-
         newFile.Fornitura.Dipendente.push({
           Movimenti: {
             "@_GenerazioneAutomaticaDaTeorico": "N",
@@ -174,13 +177,30 @@ const File: React.FC = () => {
       // Costruisci il nuovo XML
       const newXmlString = builder.build(newFile);
 
-      console.log("newXmlString", newXmlString);
+      const savePath = await save({
+        defaultPath: fullPath.replace(".xml", "-new.xml"),
+        filters: [
+          {
+            name: "File xml",
+            extensions: ["xml"],
+          },
+        ],
+      });
+
+      if (!savePath) return;
 
       // Salva il nuovo XML nel file
-      await writeTextFile(fullPath.replace(".xml", "-new.xml"), newXmlString);
-      console.log("File XML salvato con successo.");
+      await writeTextFile(savePath, newXmlString);
+      message("File salvato con successo.", {
+        title: "Successo",
+        kind: "info",
+      });
     } catch (error) {
       console.error("Errore durante il salvataggio del file XML: ", error);
+      message("Errore durante il salvataggio del file XML.", {
+        title: "Errore",
+        kind: "error",
+      });
     }
   }
 
@@ -192,15 +212,28 @@ const File: React.FC = () => {
   return (
     <div>
       <Link to="/">Back</Link>
-      <p>
-        File: {path}\{filename}
-      </p>
+      <p>File: {path}</p>
       {file && (
         <>
           <p>codici trovati: </p>
           <ul>
             {Array.from(fileCodes).map((code, index) => (
-              <li key={index}>{code}</li>
+              <>
+                <input
+                  type="checkbox"
+                  key={index}
+                  name={"code-" + code.toString()}
+                  checked={selectedCodes.includes(code)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedCodes([...selectedCodes, code]);
+                    } else {
+                      setSelectedCodes(selectedCodes.filter((c) => c !== code));
+                    }
+                  }}
+                />
+                <label htmlFor={"code-" + code.toString()}>{code}</label>
+              </>
             ))}
           </ul>
 
@@ -211,7 +244,7 @@ const File: React.FC = () => {
             </p>
           )}
 
-          <button onClick={saveXmlFile}>Save XML</button>
+          <button onClick={saveXmlFile}>Salva file XML</button>
         </>
       )}
     </div>
