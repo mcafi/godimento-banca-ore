@@ -1,5 +1,5 @@
 {
-  "name": "progettyno",
+  "name": "godimento-banca-ore",
   "private": true,
   "version": "0.1.0",
   "type": "module",
@@ -10,16 +10,19 @@
     "tauri": "tauri"
   },
   "dependencies": {
+    "@tailwindcss/vite": "^4.0.9",
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-dialog": "^2.2.0",
     "@tauri-apps/plugin-fs": "^2.2.0",
     "@tauri-apps/plugin-opener": "^2",
     "date-fns": "^4.1.0",
     "fast-xml-parser": "^5.0.7",
+    "godimento-banca-ore": "file:",
     "progettyno": "file:",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router": "^7.2.0"
+    "react-router": "^7.2.0",
+    "tailwindcss": "^4.0.9"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

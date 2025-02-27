@@ -10,7 +10,12 @@ function App() {
     const selectedFile = await open({
       multiple: false,
       directory: false,
-      filter: "xml",
+      filters: [
+        {
+          name: "File XML",
+          extensions: ["xml"],
+        },
+      ],
     });
 
     if (!selectedFile) return;

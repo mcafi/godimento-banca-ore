@@ -210,32 +210,30 @@ const File: React.FC = () => {
   }, []);
 
   return (
-    <div>
-      <Link to="/">Back</Link>
-      <p>File: {path}</p>
+    <div className="p-4">
+      <Link to="/">Torna alla schermata iniziale</Link>
+      <h2 className="text-2xl mb-2">File: {path}</h2>
       {file && (
-        <>
+        <div className="mb-2">
           <p>codici trovati: </p>
-          <ul>
-            {Array.from(fileCodes).map((code, index) => (
-              <>
-                <input
-                  type="checkbox"
-                  key={index}
-                  name={"code-" + code.toString()}
-                  checked={selectedCodes.includes(code)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedCodes([...selectedCodes, code]);
-                    } else {
-                      setSelectedCodes(selectedCodes.filter((c) => c !== code));
-                    }
-                  }}
-                />
-                <label htmlFor={"code-" + code.toString()}>{code}</label>
-              </>
-            ))}
-          </ul>
+          {Array.from(fileCodes).map((code, index) => (
+            <div className="mb-2">
+              <input
+                type="checkbox"
+                key={index}
+                name={"code-" + code.toString()}
+                checked={selectedCodes.includes(code)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedCodes([...selectedCodes, code]);
+                  } else {
+                    setSelectedCodes(selectedCodes.filter((c) => c !== code));
+                  }
+                }}
+              />
+              <label htmlFor={"code-" + code.toString()}>{code}</label>
+            </div>
+          ))}
 
           {startDate && (
             <p>
@@ -245,7 +243,7 @@ const File: React.FC = () => {
           )}
 
           <button onClick={saveXmlFile}>Salva file XML</button>
-        </>
+        </div>
       )}
     </div>
   );
