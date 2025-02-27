@@ -4,7 +4,7 @@ export type Dipendente = {
     "@_CodAziendaUfficiale": string;
     "@_CodDipendenteUfficiale": string;
     Movimenti: {
-        Movimento: Movimento[]
+        Movimento?: Movimento[]
         "@_GenerazioneAutomaticaDaTeorico": string
     };
 }
