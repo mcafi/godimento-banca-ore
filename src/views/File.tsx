@@ -23,7 +23,7 @@ const File: React.FC = () => {
 
   const [file, setFile] = useState<XmlFile | null>(null);
 
-  const [codes, setCodes] = useState<Set<string | number>>(new Set());
+  const [fileCodes, setFileCodes] = useState<Set<string | number>>(new Set());
   const [startDate, setStartDate] = useState<Date | null>(null);
 
   async function readExcelFile() {
@@ -40,6 +40,8 @@ const File: React.FC = () => {
       console.log("result", result);
 
       setFile(result);
+
+      const codes = new Set<string | number>();
 
       result.Fornitura.Dipendente.forEach((dipendente) => {
         if (
@@ -60,6 +62,8 @@ const File: React.FC = () => {
           codes.add(movimento.CodGiustificativoUfficiale);
         });
       });
+
+      setFileCodes(codes);
 
       if (!startDate) return;
 
@@ -136,8 +140,8 @@ const File: React.FC = () => {
 
               week[k] += hoursToAdd;
 
-              console.log("reminder", reminder);
-              console.log("hoursToAdd", hoursToAdd);
+              if (hoursToAdd <= 0) continue;
+
               newMovimenti.push({
                 CodGiustificativoUfficiale: newCode,
                 Data: formatDate(
@@ -195,15 +199,18 @@ const File: React.FC = () => {
         <>
           <p>codici trovati: </p>
           <ul>
-            {Array.from(codes).map((code, index) => (
+            {Array.from(fileCodes).map((code, index) => (
               <li key={index}>{code}</li>
             ))}
           </ul>
 
-          <p>
-            Data di inizio:{" "}
-            {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })}
-          </p>
+          {startDate && (
+            <p>
+              Data di inizio:{" "}
+              {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })}
+            </p>
+          )}
+
           <button onClick={saveXmlFile}>Save XML</button>
         </>
       )}
