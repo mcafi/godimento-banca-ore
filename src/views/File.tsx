@@ -4,7 +4,8 @@ import { XMLParser, XMLBuilder } from "fast-xml-parser";
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { XmlFile } from "../types/XmlFile";
-import { getEmptyXml } from "../utils/xmlUtils";
+import { Movimento } from "../types/Movimento";
+import { getEmptyXml } from "@utils/xmlUtils";
 import {
   getDay,
   parse,
@@ -13,7 +14,6 @@ import {
   isBefore,
   differenceInCalendarDays,
 } from "date-fns";
-import { Movimento } from "../types/Movimento";
 
 import { it } from "date-fns/locale/it";
 
