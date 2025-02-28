@@ -210,42 +210,64 @@ const File: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-4">
-      <Link to="/">Torna alla schermata iniziale</Link>
-      <h2 className="text-2xl mb-2">File: {path}</h2>
-      {file && (
-        <div className="mb-2">
-          <p>codici trovati: </p>
-          {Array.from(fileCodes).map((code, index) => (
-            <div className="mb-2">
-              <input
-                type="checkbox"
-                key={index}
-                name={"code-" + code.toString()}
-                checked={selectedCodes.includes(code)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedCodes([...selectedCodes, code]);
-                  } else {
-                    setSelectedCodes(selectedCodes.filter((c) => c !== code));
-                  }
-                }}
-              />
-              <label htmlFor={"code-" + code.toString()}>{code}</label>
-            </div>
-          ))}
-
-          {startDate && (
-            <p>
-              Data di inizio:{" "}
-              {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })}
-            </p>
-          )}
-
-          <button onClick={saveXmlFile}>Salva file XML</button>
+    <main className="bg-neutral-900 min-h-screen p-4 text-white">
+      <div className="flex flex-col items-start justify-center h-full">
+        <div className="mb-4">
+          <Link to="/">&larr; Torna alla schermata iniziale</Link>
         </div>
-      )}
-    </div>
+        <h2 className="text-xl mb-2">File: {path}</h2>
+        {file && (
+          <div className="mb-2">
+            {startDate && (
+              <p className="mb-2">
+                Data di inizio:{" "}
+                {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })}
+              </p>
+            )}
+            <div className="mb-4">
+              <p className="mb-2">
+                Seleziona i codici da includere nel calcolo:{" "}
+              </p>
+              <div className="flex flex-col gap-1">
+                {Array.from(fileCodes).map((code, index) => (
+                  <div className="mb-2 flex items-center" key={index}>
+                    <input
+                      type="checkbox"
+                      className="accent-lime-800 size-6 hover:cursor-pointer"
+                      name={"checkbox-" + code.toString()}
+                      id={"checkbox-" + code.toString()}
+                      checked={selectedCodes.includes(code)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setSelectedCodes([...selectedCodes, code]);
+                        } else {
+                          setSelectedCodes(
+                            selectedCodes.filter((c) => c !== code)
+                          );
+                        }
+                      }}
+                    />
+                    <label
+                      className="px-3 hover:cursor-pointer"
+                      htmlFor={"checkbox-" + code.toString()}
+                    >
+                      {code}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <button
+              className="text-white bg-lime-900 px-4 py-2 rounded-lg hover:cursor-pointer drop-shadow-[0_0_15px_rgba(25,46,3,0)] hover:drop-shadow-[0_0_15px_rgb(25,46,3)] transition-all"
+              onClick={saveXmlFile}
+            >
+              Salva file XML
+            </button>
+          </div>
+        )}
+      </div>
+    </main>
   );
 };
 
