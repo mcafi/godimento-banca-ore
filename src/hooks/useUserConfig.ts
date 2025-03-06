@@ -11,7 +11,7 @@ export type UserConfig = {
 
 const defaultConfig: UserConfig = {
     dateFormat: "yyyy-MM-dd",
-    codeBancaOre: "BO",
+    codeBancaOre: "XX",
     includeZeroDays: false,
 };
 

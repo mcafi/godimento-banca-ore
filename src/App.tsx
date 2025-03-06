@@ -1,7 +1,8 @@
 import { open, message } from "@tauri-apps/plugin-dialog";
 
 import "./App.css";
-import { useNavigate } from "react-router";
+import { Link, useNavigate } from "react-router";
+import { Button } from "./components/Button";
 
 function App() {
   let navigate = useNavigate();
@@ -33,14 +34,13 @@ function App() {
 
   return (
     <main className="bg-neutral-900 min-h-screen p-4">
-      <div className="flex items-center justify-center h-full py-10">
-        <button
-          className="text-white bg-lime-900 px-4 py-2 rounded-lg hover:cursor-pointer drop-shadow-[0_0_15px_rgba(25,46,3,0)] hover:drop-shadow-[0_0_15px_rgb(25,46,3)] transition-all"
-          type="button"
-          onClick={openFile}
-        >
-          Clicca per selezionare un file
-        </button>
+      <div className="flex flex-col items-center justify-center h-full py-10">
+        <Button onClick={openFile}>Clicca per selezionare un file</Button>
+        <div>
+          <Link to="/settings" className="text-lime-500 hover:underline">
+            Impostazioni
+          </Link>
+        </div>
       </div>
     </main>
   );
