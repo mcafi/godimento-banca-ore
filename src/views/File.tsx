@@ -1,6 +1,4 @@
-import { readFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { message, save } from "@tauri-apps/plugin-dialog";
-import { XMLParser, XMLBuilder } from "fast-xml-parser";
 import React, { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { XmlFile } from "../types/XmlFile";
@@ -16,6 +14,8 @@ import {
 } from "date-fns";
 
 import { it } from "date-fns/locale/it";
+import { useUserConfig } from "@/hooks/useUserConfig";
+import { readAndParseXml, writeXmlFile } from "@/utils/fileUtils";
 
 const File: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -30,30 +30,26 @@ const File: React.FC = () => {
     []
   );
 
+  const { config } = useUserConfig();
+
   async function readExcelFile() {
     try {
-      const fullPath = `${path}`;
-      const buffer = await readFile(fullPath);
-      const xmlString = new TextDecoder().decode(buffer);
-      const xmlParserOptions = {
-        ignoreAttributes: false,
-        attributeNamePrefix: "@_",
-      };
-      const parser = new XMLParser(xmlParserOptions);
-      const result: XmlFile = parser.parse(xmlString);
+      const parsedFile = await readAndParseXml(path);
 
-      setFile(result);
+      if (!parsedFile) return;
+
+      setFile(parsedFile);
 
       const codes = new Set<string | number>();
 
-      result.Fornitura.Dipendente.forEach((dipendente) => {
+      parsedFile.Fornitura.Dipendente.forEach((dipendente) => {
         if (
           dipendente.Movimenti.Movimento &&
           dipendente.Movimenti.Movimento.length > 0
         ) {
           const date = parse(
             dipendente.Movimenti.Movimento[0].Data,
-            "yyyy-MM-dd",
+            config.dateFormat,
             new Date()
           );
           if (!startDate || isBefore(date, startDate)) {
@@ -82,12 +78,7 @@ const File: React.FC = () => {
   async function saveXmlFile() {
     try {
       const fullPath = `${path}`;
-      const builder = new XMLBuilder({
-        attributeNamePrefix: "@_",
-        ignoreAttributes: false,
-      });
-
-      const newCode = "BO";
+      const newCode = config.codeBancaOre;
 
       const numberOfDipendenti = file?.Fornitura.Dipendente.length ?? 0;
 
@@ -119,7 +110,7 @@ const File: React.FC = () => {
         for (let j = 0; j < countOfMovimenti; j++) {
           const movimento = movimenti[j];
 
-          const date = parse(movimento.Data, "yyyy-MM-dd", new Date());
+          const date = parse(movimento.Data, config.dateFormat, new Date());
           const day = getDay(date);
 
           if (!currentStartDate) continue;
@@ -131,7 +122,7 @@ const File: React.FC = () => {
           if (
             j == countOfMovimenti - 1 ||
             differenceInCalendarDays(
-              parse(movimenti[j + 1].Data, "yyyy-MM-dd", new Date()),
+              parse(movimenti[j + 1].Data, config.dateFormat, new Date()),
               currentStartDate
             ) >= 7
           ) {
@@ -145,13 +136,13 @@ const File: React.FC = () => {
 
               week[k] += hoursToAdd;
 
-              if (hoursToAdd <= 0) continue;
+              if (!config.includeZeroDays && hoursToAdd <= 0) continue;
 
               newMovimenti.push({
                 CodGiustificativoUfficiale: newCode,
                 Data: formatDate(
                   addDays(currentStartDate, k - 1),
-                  "yyyy-MM-dd"
+                  config.dateFormat
                 ),
                 NumOre: hoursToAdd,
                 GiornoDiRiposo: "N",
@@ -175,7 +166,6 @@ const File: React.FC = () => {
       }
 
       // Costruisci il nuovo XML
-      const newXmlString = builder.build(newFile);
 
       const savePath = await save({
         defaultPath: fullPath.replace(".xml", "-new.xml"),
@@ -190,7 +180,8 @@ const File: React.FC = () => {
       if (!savePath) return;
 
       // Salva il nuovo XML nel file
-      await writeTextFile(savePath, newXmlString);
+      await writeXmlFile(savePath, newFile);
+
       message("File salvato con successo.", {
         title: "Successo",
         kind: "info",
