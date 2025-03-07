@@ -11,6 +11,7 @@ import {
   formatDate,
   isBefore,
   differenceInCalendarDays,
+  subDays,
 } from "date-fns";
 
 import { it } from "date-fns/locale/it";
@@ -43,6 +44,8 @@ const File: React.FC = () => {
 
       const codes = new Set<string | number>();
 
+      let actualStartDate: Date | null = null;
+
       parsedFile.Fornitura.Dipendente.forEach((dipendente) => {
         if (
           dipendente.Movimenti.Movimento &&
@@ -53,8 +56,9 @@ const File: React.FC = () => {
             config.dateFormatInput,
             new Date()
           );
-          if (!startDate || isBefore(date, startDate)) {
-            setStartDate(date);
+
+          if (!actualStartDate || isBefore(date, actualStartDate)) {
+            actualStartDate = date;
           }
         }
 
@@ -63,14 +67,16 @@ const File: React.FC = () => {
         });
       });
 
+      if (actualStartDate) {
+        subDays(actualStartDate, getDay(actualStartDate) - 1);
+
+        setStartDate(actualStartDate);
+      }
+
       setFileCodes(codes);
       setSelectedCodes(Array.from(codes));
 
       if (!startDate) return;
-
-      if (getDay(startDate) != 1) {
-        setStartDate(addDays(startDate, 8 - getDay(startDate)));
-      }
     } catch (error) {
       console.error("Errore durante la lettura del file Excel: ", error);
     }

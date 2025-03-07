@@ -1,6 +1,6 @@
 import { XmlFile } from "@/types/XmlFile";
 import { readFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { XMLBuilder, XmlBuilderOptions, XMLParser } from "fast-xml-parser";
+import { XMLBuilder, XMLParser } from "fast-xml-parser";
 
 const xmlParserOptions = {
     ignoreAttributes: false,
