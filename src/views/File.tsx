@@ -10,8 +10,10 @@ import {
   addDays,
   formatDate,
   isBefore,
-  differenceInCalendarDays,
   subDays,
+  getMonth,
+  addWeeks,
+  differenceInWeeks,
 } from "date-fns";
 
 import { it } from "date-fns/locale/it";
@@ -27,6 +29,7 @@ const File: React.FC = () => {
 
   const [fileCodes, setFileCodes] = useState<Set<string | number>>(new Set());
   const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
 
   const [selectedCodes, setSelectedCodes] = useState<Array<string | number>>(
     []
@@ -67,11 +70,19 @@ const File: React.FC = () => {
         });
       });
 
-      if (actualStartDate) {
-        subDays(actualStartDate, getDay(actualStartDate) - 1);
+      if (!actualStartDate) return;
 
-        setStartDate(actualStartDate);
+      subDays(actualStartDate, getDay(actualStartDate) - 1);
+
+      setStartDate(actualStartDate);
+
+      let endDate = actualStartDate;
+
+      while (getMonth(endDate) === getMonth(actualStartDate)) {
+        endDate = addWeeks(endDate, 1);
       }
+
+      setEndDate(endDate);
 
       setFileCodes(codes);
       setSelectedCodes(Array.from(codes));
@@ -93,7 +104,7 @@ const File: React.FC = () => {
       newFile.Fornitura.Dipendente = [];
 
       for (let i = 0; i < numberOfDipendenti; i++) {
-        if (!startDate) continue;
+        if (!startDate || !endDate) continue;
 
         const dipendente = file?.Fornitura.Dipendente[i];
 
@@ -104,8 +115,6 @@ const File: React.FC = () => {
 
         const movimenti = dipendente?.Movimenti.Movimento;
 
-        console.log("Movimenti: ", movimenti);
-
         const newMovimenti: Movimento[] = [];
 
         if (!movimenti) continue;
@@ -114,7 +123,11 @@ const File: React.FC = () => {
 
         let currentStartDate: Date = startDate;
 
-        let week = new Array(7).fill(0);
+        let weeksInterval = differenceInWeeks(endDate, startDate);
+
+        const month = Array.from({ length: weeksInterval }, () =>
+          new Array(7).fill(0)
+        );
 
         for (let j = 0; j < countOfMovimenti; j++) {
           const movimento = movimenti[j];
@@ -128,45 +141,43 @@ const File: React.FC = () => {
 
           if (!currentStartDate) continue;
 
+          const weeksDifference = differenceInWeeks(date, startDate);
+          console.log("Weeks difference: ", weeksDifference);
+
           if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
-            week[day] += movimento.NumOre;
-          }
-
-          if (
-            j == countOfMovimenti - 1 ||
-            differenceInCalendarDays(
-              parse(movimenti[j + 1].Data, config.dateFormatInput, new Date()),
-              currentStartDate
-            ) >= 7
-          ) {
-            for (let k = 0; k < 7; k++) {
-              const reminder = 40 - week.reduce((acc, curr) => acc + curr, 0);
-
-              const hoursToAdd =
-                k == 0 || reminder <= 0
-                  ? 0
-                  : Math.min(Math.max(8 - week[k], 0), Math.max(reminder, 0));
-
-              week[k] += hoursToAdd;
-
-              if (!config.includeZeroDays && hoursToAdd <= 0) continue;
-
-              newMovimenti.push({
-                CodGiustificativoUfficiale: newCode,
-                Data: formatDate(
-                  addDays(currentStartDate, k - 1),
-                  config.dateFormatOutput
-                ),
-                NumOre: hoursToAdd,
-                GiornoDiRiposo: "N",
-                GiornoChiusuraStraordinari: "N",
-              });
-            }
-
-            week = new Array(7).fill(0);
-            currentStartDate = addDays(currentStartDate, 7);
+            month[weeksDifference][day] += movimento.NumOre;
           }
         }
+
+        console.log("days: ", month);
+
+        month.forEach((week, index) => {
+          for (let k = 0; k < 7; k++) {
+            const reminder = 40 - week.reduce((acc, curr) => acc + curr, 0);
+
+            const hoursToAdd =
+              k == 0 || reminder <= 0
+                ? 0
+                : Math.min(Math.max(8 - week[k], 0), Math.max(reminder, 0));
+
+            week[k] += hoursToAdd;
+
+            if (!config.includeZeroDays && hoursToAdd <= 0) continue;
+
+            newMovimenti.push({
+              CodGiustificativoUfficiale: newCode,
+              Data: formatDate(
+                addDays(currentStartDate, index * 7 + k - 1),
+                config.dateFormatOutput
+              ),
+              NumOre: hoursToAdd,
+              GiornoDiRiposo: "N",
+              GiornoChiusuraStraordinari: "N",
+            });
+          }
+        });
+
+        console.log("New movimenti: ", newMovimenti);
 
         newFile.Fornitura.Dipendente.push({
           Movimenti: {
