@@ -23,6 +23,9 @@ importers:
       '@tauri-apps/plugin-opener':
         specifier: ^2
         version: 2.2.5
+      clsx:
+        specifier: ^2.1.1
+        version: 2.1.1
       date-fns:
         specifier: ^4.1.0
         version: 4.1.0
@@ -31,10 +34,10 @@ importers:
         version: 5.0.7
       godimento-banca-ore:
         specifier: 'file:'
-        version: file:(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1))
+        version: file:(typescript@5.6.3)(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1))
       progettyno:
         specifier: 'file:'
-        version: godimento-banca-ore@file:(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1))
+        version: godimento-banca-ore@file:(typescript@5.6.3)(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1))
       react:
         specifier: ^18.3.1
         version: 18.3.1
@@ -50,6 +53,9 @@ importers:
       vite-tsconfig-paths:
         specifier: ^5.1.4
         version: 5.1.4(typescript@5.6.3)(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1))
+      xml-formatter:
+        specifier: ^3.6.4
+        version: 3.6.4
     devDependencies:
       '@tauri-apps/cli':
         specifier: ^2
@@ -616,6 +622,10 @@ packages:
   caniuse-lite@1.0.30001700:
     resolution: {integrity: sha512-2S6XIXwaE7K7erT8dY+kLQcpa5ms63XlRkMkReXjle+kf6c5g38vyMl+Z5y8dSxOFDhcFe+nxnn261PLxBSQsQ==}
 
+  clsx@2.1.1:
+    resolution: {integrity: sha512-eYm0QWBtUrBWZWG0d386OGAw16Z995PiOVo2B7bjWSbHedGl5e0ZWaq65kOGgUSNesEIDkB9ISbTg/JK9dhCZA==}
+    engines: {node: '>=6'}
+
   convert-source-map@2.0.0:
     resolution: {integrity: sha512-Kvp459HrV2FEJ1CAsi1Ku+MY3kasH19TFykTz2xWmMeq6bk2NU3XXvfJ+Q61m0xktWwt+1HSYf3JZsTms3aRJg==}
 
@@ -914,6 +924,14 @@ packages:
         optional: true
       yaml:
         optional: true
+
+  xml-formatter@3.6.4:
+    resolution: {integrity: sha512-vkvTNw4u9mp72lMmJHw771NE9EJLX0kfwIcP+ZEo9eJ6HmotX23vmykyROyIQ9Y3a+ckdUdhxIE2ZO66rYuPrg==}
+    engines: {node: '>= 16'}
+
+  xml-parser-xo@4.1.3:
+    resolution: {integrity: sha512-U6eN5Pyrlek9ottHVpT9e8YUax75oVYXbnYxU+utzDC7i+OyWj9ynsNMiZNQZvpuazbG0O7iLAs9FkcFmzlgSA==}
+    engines: {node: '>= 16'}
 
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
@@ -1358,6 +1376,8 @@ snapshots:
 
   caniuse-lite@1.0.30001700: {}
 
+  clsx@2.1.1: {}
+
   convert-source-map@2.0.0: {}
 
   cookie@1.0.2: {}
@@ -1422,20 +1442,24 @@ snapshots:
 
   globrex@0.1.2: {}
 
-  godimento-banca-ore@file:(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1)):
+  godimento-banca-ore@file:(typescript@5.6.3)(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1)):
     dependencies:
       '@tailwindcss/vite': 4.0.9(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1))
       '@tauri-apps/api': 2.2.0
       '@tauri-apps/plugin-dialog': 2.2.0
       '@tauri-apps/plugin-fs': 2.2.0
       '@tauri-apps/plugin-opener': 2.2.5
+      clsx: 2.1.1
       date-fns: 4.1.0
       fast-xml-parser: 5.0.7
       react: 18.3.1
       react-dom: 18.3.1(react@18.3.1)
       react-router: 7.2.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       tailwindcss: 4.0.9
+      vite-tsconfig-paths: 5.1.4(typescript@5.6.3)(vite@6.2.0(jiti@2.4.2)(lightningcss@1.29.1))
     transitivePeerDependencies:
+      - supports-color
+      - typescript
       - vite
 
   graceful-fs@4.2.11: {}
@@ -1612,5 +1636,11 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.4.2
       lightningcss: 1.29.1
+
+  xml-formatter@3.6.4:
+    dependencies:
+      xml-parser-xo: 4.1.3
+
+  xml-parser-xo@4.1.3: {}
 
   yallist@3.1.1: {}

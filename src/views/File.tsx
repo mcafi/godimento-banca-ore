@@ -16,6 +16,7 @@ import {
 import { it } from "date-fns/locale/it";
 import { useUserConfig } from "@/hooks/useUserConfig";
 import { readAndParseXml, writeXmlFile } from "@/utils/fileUtils";
+import { Button } from "@/components/Button";
 
 const File: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -49,7 +50,7 @@ const File: React.FC = () => {
         ) {
           const date = parse(
             dipendente.Movimenti.Movimento[0].Data,
-            config.dateFormat,
+            config.dateFormatInput,
             new Date()
           );
           if (!startDate || isBefore(date, startDate)) {
@@ -97,6 +98,8 @@ const File: React.FC = () => {
 
         const movimenti = dipendente?.Movimenti.Movimento;
 
+        console.log("Movimenti: ", movimenti);
+
         const newMovimenti: Movimento[] = [];
 
         if (!movimenti) continue;
@@ -110,7 +113,11 @@ const File: React.FC = () => {
         for (let j = 0; j < countOfMovimenti; j++) {
           const movimento = movimenti[j];
 
-          const date = parse(movimento.Data, config.dateFormat, new Date());
+          const date = parse(
+            movimento.Data,
+            config.dateFormatInput,
+            new Date()
+          );
           const day = getDay(date);
 
           if (!currentStartDate) continue;
@@ -122,7 +129,7 @@ const File: React.FC = () => {
           if (
             j == countOfMovimenti - 1 ||
             differenceInCalendarDays(
-              parse(movimenti[j + 1].Data, config.dateFormat, new Date()),
+              parse(movimenti[j + 1].Data, config.dateFormatInput, new Date()),
               currentStartDate
             ) >= 7
           ) {
@@ -142,7 +149,7 @@ const File: React.FC = () => {
                 CodGiustificativoUfficiale: newCode,
                 Data: formatDate(
                   addDays(currentStartDate, k - 1),
-                  config.dateFormat
+                  config.dateFormatOutput
                 ),
                 NumOre: hoursToAdd,
                 GiornoDiRiposo: "N",
@@ -248,13 +255,7 @@ const File: React.FC = () => {
                 ))}
               </div>
             </div>
-
-            <button
-              className="text-white bg-lime-900 px-4 py-2 rounded-lg hover:cursor-pointer drop-shadow-[0_0_15px_rgba(25,46,3,0)] hover:drop-shadow-[0_0_15px_rgb(25,46,3)] transition-all"
-              onClick={saveXmlFile}
-            >
-              Salva file XML
-            </button>
+            <Button onClick={saveXmlFile}>Salva file XML</Button>
           </div>
         )}
       </div>

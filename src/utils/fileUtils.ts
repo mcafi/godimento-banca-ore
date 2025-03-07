@@ -1,6 +1,6 @@
 import { XmlFile } from "@/types/XmlFile";
 import { readFile, writeTextFile } from "@tauri-apps/plugin-fs";
-import { XMLBuilder, XMLParser } from "fast-xml-parser";
+import { XMLBuilder, XmlBuilderOptions, XMLParser } from "fast-xml-parser";
 
 const xmlParserOptions = {
     ignoreAttributes: false,
@@ -22,7 +22,8 @@ export async function readAndParseXml(path: string | null): Promise<XmlFile> {
 }
 
 export async function writeXmlFile(path: string, xml: XmlFile): Promise<void> {
-    const builder = new XMLBuilder(xmlParserOptions);
+    const options = { ...xmlParserOptions, format: true, declaration: true };
+    const builder = new XMLBuilder(options);
 
     const newXmlString = builder.build(xml);
     await writeTextFile(path, newXmlString);

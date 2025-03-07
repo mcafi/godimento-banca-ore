@@ -4,14 +4,18 @@ import { message } from "@tauri-apps/plugin-dialog";
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
 
 export type UserConfig = {
-    dateFormat: string;
+    dateFormatInput: string;
+    dateFormatOutput: string;
+    useSameFormatAsInput: boolean;
     codeBancaOre: string;
     includeZeroDays: boolean;
 }
 
 const defaultConfig: UserConfig = {
-    dateFormat: "yyyy-MM-dd",
-    codeBancaOre: "XX",
+    dateFormatInput: "yyyy-MM-dd",
+    dateFormatOutput: "yyyy-MM-dd",
+    useSameFormatAsInput: true,
+    codeBancaOre: "BO",
     includeZeroDays: false,
 };
 
