@@ -1,5 +1,5 @@
 import { message, save } from "@tauri-apps/plugin-dialog";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
 import { XmlFile } from "../types/XmlFile";
 import { Movimento } from "../types/Movimento";
@@ -34,6 +34,20 @@ const File: React.FC = () => {
   const [selectedCodes, setSelectedCodes] = useState<Array<string | number>>(
     []
   );
+
+  const codiciAziende = useMemo(() => {
+    const aziende = file?.Fornitura.Dipendente.map(
+      (dipendente) => dipendente["@_CodAziendaUfficiale"]
+    );
+    return Array.from(new Set(aziende));
+  }, [file]);
+
+  const codiciDipendenti = useMemo(() => {
+    const dipendenti = file?.Fornitura.Dipendente.map(
+      (dipendente) => dipendente["@_CodDipendenteUfficiale"]
+    );
+    return Array.from(new Set(dipendenti));
+  }, [file]);
 
   const { config } = useUserConfig();
 
@@ -214,62 +228,83 @@ const File: React.FC = () => {
   }, []);
 
   return (
-    <main className="bg-neutral-900 min-h-screen p-4 text-white">
+    <main className="bg-primary-50 min-h-screen p-4 text-white">
       <div className="flex flex-col items-start justify-center h-full">
+        <h1 className="text-2xl mb-4">Elaborazione godimento banca ore</h1>
         <div className="mb-4">
-          <Link to="/">&larr; Torna alla schermata iniziale</Link>
+          <h2 className="text-lg mb-2">File selezionato: {path}</h2>
         </div>
-        <h2 className="text-xl mb-2">File: {path}</h2>
-        {file && (
-          <div className="mb-2">
-            {startDate && (
-              <p className="mb-2">
-                Data di inizio:{" "}
-                {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })}
-              </p>
-            )}
-            {endDate && (
-              <p className="mb-2">
-                Data di fine:{" "}
-                {formatDate(endDate, "EEEE d MMMM yyyy", { locale: it })}
-              </p>
-            )}
-            <div className="mb-4">
-              <p className="mb-2">
-                Seleziona i codici da includere nel calcolo:
-              </p>
-              <div className="flex flex-col gap-1">
-                {Array.from(fileCodes).map((code, index) => (
-                  <div className="mb-2 flex items-center" key={index}>
-                    <input
-                      type="checkbox"
-                      className="accent-lime-800 size-6 hover:cursor-pointer"
-                      name={"checkbox-" + code.toString()}
-                      id={"checkbox-" + code.toString()}
-                      checked={selectedCodes.includes(code)}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setSelectedCodes([...selectedCodes, code]);
-                        } else {
-                          setSelectedCodes(
-                            selectedCodes.filter((c) => c !== code)
-                          );
-                        }
-                      }}
-                    />
-                    <label
-                      className="px-3 hover:cursor-pointer"
-                      htmlFor={"checkbox-" + code.toString()}
-                    >
-                      {code}
-                    </label>
-                  </div>
-                ))}
-              </div>
+
+        <div className="mb-4">
+          <h2 className="text-lg mb-2">Dettagli</h2>
+          {startDate && (
+            <p className="mb-2">
+              Data di inizio:{" "}
+              {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })}{" "}
+              (compreso)
+            </p>
+          )}
+          {endDate && (
+            <p className="mb-2">
+              Data di fine:{" "}
+              {formatDate(endDate, "EEEE d MMMM yyyy", { locale: it })}{" "}
+              (escluso)
+            </p>
+          )}
+          {codiciAziende && (
+            <div>
+              <p className="mb-2">Aziende: {codiciAziende.join(", ")}</p>
             </div>
-            <Button onClick={saveXmlFile}>Salva file XML</Button>
+          )}
+          {codiciDipendenti && (
+            <div>
+              <p className="mb-2">Dipendenti: {codiciDipendenti.join(", ")}</p>
+            </div>
+          )}
+          <div>
+            <p className="mb-2">
+              Codici ore: {Array.from(fileCodes).join(", ")}
+            </p>
           </div>
-        )}
+        </div>
+        <div className="mb-4">
+          <h2 className="text-lg mb-2">Opzioni</h2>
+          <p>Ore settimanali: 40</p>
+          <p>Codice banca ore: {config.codeBancaOre}</p>
+          <p className="mb-2">Codici da includere nel calcolo:</p>
+          <div className="flex flex-col gap-1">
+            {Array.from(fileCodes).map((code, index) => (
+              <div className="mb-2 flex items-center" key={index}>
+                <input
+                  type="checkbox"
+                  className="accent-primary-500 size-6 hover:cursor-pointer"
+                  name={"checkbox-" + code.toString()}
+                  id={"checkbox-" + code.toString()}
+                  checked={selectedCodes.includes(code)}
+                  onChange={(e) => {
+                    if (e.target.checked) {
+                      setSelectedCodes([...selectedCodes, code]);
+                    } else {
+                      setSelectedCodes(selectedCodes.filter((c) => c !== code));
+                    }
+                  }}
+                />
+                <label
+                  className="px-3 hover:cursor-pointer"
+                  htmlFor={"checkbox-" + code.toString()}
+                >
+                  {code}
+                </label>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="flex gap-4">
+          <Button onClick={saveXmlFile}>Salva file XML</Button>
+          <Link to="/">
+            <Button variant="secondary">Chiudi</Button>
+          </Link>
+        </div>
       </div>
     </main>
   );

@@ -1,3 +1,4 @@
+import clsx from "clsx";
 import React, { ButtonHTMLAttributes } from "react";
 
 type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -10,10 +11,15 @@ export const Button: React.FC<ButtonProps> = ({
   variant = "primary",
   ...props
 }) => {
+  const buttonClass =
+    variant === "primary" ? "bg-primary-400" : "bg-yellow-700";
   return (
     <button
       type="button"
-      className="text-white bg-lime-900 px-4 py-2 rounded-lg hover:cursor-pointer drop-shadow-[0_0_15px_rgba(25,46,3,0)] hover:drop-shadow-[0_0_15px_rgb(25,46,3)] transition-all"
+      className={clsx(
+        "text-white px-4 py-2 rounded-lg hover:cursor-pointer transition-all",
+        buttonClass
+      )}
       {...props}
     >
       {children}
