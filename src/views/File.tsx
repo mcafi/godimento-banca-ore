@@ -119,8 +119,6 @@ const File: React.FC = () => {
 
         if (!movimenti) continue;
 
-        const countOfMovimenti = movimenti.length;
-
         let currentStartDate: Date = startDate;
 
         let weeksInterval = differenceInWeeks(endDate, startDate);
@@ -129,9 +127,7 @@ const File: React.FC = () => {
           new Array(7).fill(0)
         );
 
-        for (let j = 0; j < countOfMovimenti; j++) {
-          const movimento = movimenti[j];
-
+        movimenti.forEach((movimento) => {
           const date = parse(
             movimento.Data,
             config.dateFormatInput,
@@ -139,17 +135,14 @@ const File: React.FC = () => {
           );
           const day = getDay(date);
 
-          if (!currentStartDate) continue;
+          if (!currentStartDate) return;
 
           const weeksDifference = differenceInWeeks(date, startDate);
-          console.log("Weeks difference: ", weeksDifference);
 
           if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
             month[weeksDifference][day] += movimento.NumOre;
           }
-        }
-
-        console.log("days: ", month);
+        });
 
         month.forEach((week, index) => {
           for (let k = 0; k < 7; k++) {
@@ -177,8 +170,6 @@ const File: React.FC = () => {
           }
         });
 
-        console.log("New movimenti: ", newMovimenti);
-
         newFile.Fornitura.Dipendente.push({
           Movimenti: {
             "@_GenerazioneAutomaticaDaTeorico": "N",
@@ -188,8 +179,6 @@ const File: React.FC = () => {
           "@_CodDipendenteUfficiale": codDipendenteUfficiale,
         });
       }
-
-      // Costruisci il nuovo XML
 
       const savePath = await save({
         defaultPath: fullPath.replace(".xml", "-new.xml"),
@@ -239,9 +228,15 @@ const File: React.FC = () => {
                 {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })}
               </p>
             )}
+            {endDate && (
+              <p className="mb-2">
+                Data di fine:{" "}
+                {formatDate(endDate, "EEEE d MMMM yyyy", { locale: it })}
+              </p>
+            )}
             <div className="mb-4">
               <p className="mb-2">
-                Seleziona i codici da includere nel calcolo:{" "}
+                Seleziona i codici da includere nel calcolo:
               </p>
               <div className="flex flex-col gap-1">
                 {Array.from(fileCodes).map((code, index) => (
