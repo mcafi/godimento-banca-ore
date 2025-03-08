@@ -12,7 +12,7 @@ export const Button: React.FC<ButtonProps> = ({
   ...props
 }) => {
   const buttonClass =
-    variant === "primary" ? "bg-primary-400" : "bg-yellow-700";
+    variant === "primary" ? "bg-primary-600" : "bg-yellow-600";
   return (
     <button
       type="button"
