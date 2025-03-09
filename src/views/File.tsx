@@ -20,6 +20,7 @@ import { it } from "date-fns/locale/it";
 import { useUserConfig } from "@/hooks/useUserConfig";
 import { readAndParseXml, writeXmlFile } from "@/utils/fileUtils";
 import { Button } from "@/components/Button";
+import { Checkbox } from "@/components/Checkbox";
 
 const File: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -274,28 +275,20 @@ const File: React.FC = () => {
           <p className="mb-2">Codici da includere nel calcolo:</p>
           <div className="flex flex-col gap-1">
             {Array.from(fileCodes).map((code, index) => (
-              <div className="mb-2 flex items-center" key={index}>
-                <input
-                  type="checkbox"
-                  className="accent-primary-500 size-6 hover:cursor-pointer"
-                  name={"checkbox-" + code.toString()}
-                  id={"checkbox-" + code.toString()}
-                  checked={selectedCodes.includes(code)}
-                  onChange={(e) => {
-                    if (e.target.checked) {
-                      setSelectedCodes([...selectedCodes, code]);
-                    } else {
-                      setSelectedCodes(selectedCodes.filter((c) => c !== code));
-                    }
-                  }}
-                />
-                <label
-                  className="px-3 hover:cursor-pointer"
-                  htmlFor={"checkbox-" + code.toString()}
-                >
-                  {code}
-                </label>
-              </div>
+              <Checkbox
+                key={index}
+                id={`checkbox-${code.toString()}`}
+                name={`checkbox-${code.toString()}`}
+                label={code}
+                checked={selectedCodes.includes(code)}
+                onChange={(e) => {
+                  if (e.target.checked) {
+                    setSelectedCodes([...selectedCodes, code]);
+                  } else {
+                    setSelectedCodes(selectedCodes.filter((c) => c !== code));
+                  }
+                }}
+              />
             ))}
           </div>
         </div>

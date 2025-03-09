@@ -34,11 +34,11 @@ function App() {
 
   return (
     <main className="bg-primary-950 min-h-screen p-4">
-      <div className="flex flex-col items-center justify-center h-full py-10">
+      <div className="flex flex-col items-center justify-center h-full py-10 gap-5">
         <Button onClick={openFile}>Clicca per selezionare un file</Button>
         <div>
           <Link to="/settings" className="text-primary-200 hover:underline">
-            Impostazioni
+            <Button variant="secondary">Impostazioni</Button>
           </Link>
         </div>
       </div>
