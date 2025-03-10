@@ -1,19 +1,44 @@
 import { useUserConfig } from "@/hooks/useUserConfig";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router";
 import clsx from "clsx";
 import { Button } from "@/components/Button";
+import { getName, getVersion } from "@tauri-apps/api/app";
 
 const Settings: React.FC = () => {
-  const { config, updateConfig, resetConfig, saveConfig } = useUserConfig();
+  //const { config, updateConfig, resetConfig, saveConfig } = useUserConfig();
+
+  const [appName, setAppName] = useState<string>("");
+  const [version, setVersion] = useState<string>("");
+
+  useEffect(() => {
+    async function fetchAppInfo() {
+      try {
+        const name = await getName();
+        const ver = await getVersion();
+        setAppName(name);
+        setVersion(ver);
+      } catch (error) {
+        console.error(
+          "Errore durante il recupero delle informazioni dell'app:",
+          error
+        );
+      }
+    }
+
+    fetchAppInfo();
+  }, []);
 
   return (
-    <main className="bg-neutral-900 min-h-screen p-4 text-white">
-      <div className="flex items-center justify-center h-full">
-        <Link to="/" className="text-lime-500 hover:underline">
-          Indietro
-        </Link>
-      </div>
+    <main className="bg-primary-950 min-h-screen p-4 text-white">
+      <Link to="/">
+        <Button variant="secondary">Chiudi</Button>
+      </Link>
+      <div>Coming soon</div>
+      <p>
+        {appName} - Versione {version}
+      </p>
+      {/*}
       <div>
         <h2 className="text-xl font-semibold">Impostazioni</h2>
         <div>
@@ -96,6 +121,7 @@ const Settings: React.FC = () => {
         </div>
         <pre>{JSON.stringify(config, null, 2)}</pre>
       </div>
+      */}
     </main>
   );
 };

@@ -2,5 +2,5 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 fn main() {
-    progettyno_lib::run()
+    godimento_banca_ore_lib::run()
 }
