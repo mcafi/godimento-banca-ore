@@ -3,9 +3,12 @@ import React, { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Button } from "@/components/Button";
 import { getName, getVersion } from "@tauri-apps/api/app";
+import { useTranslation } from "react-i18next";
 
 const Settings: React.FC = () => {
   const { config, updateConfig, resetConfig, saveConfig } = useUserConfig();
+
+  const { t } = useTranslation();
 
   const [appName, setAppName] = useState<string>("");
   const [version, setVersion] = useState<string>("");
@@ -32,12 +35,11 @@ const Settings: React.FC = () => {
 
   return (
     <main className="bg-primary-950 min-h-screen p-4 text-white">
-      <div>Coming soon</div>
-      <p>
-        {appName} - Versione {version}
-      </p>
+      <h1 className="text-xl font-semibold">{t("settings")}</h1>
       <div>
-        <h2 className="text-xl font-semibold">Impostazioni</h2>
+        <p>
+          {appName} - Versione {version}
+        </p>
         <div>
           <div className="">
             <label htmlFor="inputDateFormat">Formato data input</label>

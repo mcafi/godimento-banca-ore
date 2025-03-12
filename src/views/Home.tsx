@@ -1,11 +1,10 @@
 import { open, message } from "@tauri-apps/plugin-dialog";
 
-import "./App.css";
 import { useNavigate } from "react-router";
-import { Button } from "./components/Button";
+import { Button } from "../components/Button";
 import { useTranslation } from "react-i18next";
 
-function App() {
+function Home() {
   let navigate = useNavigate();
 
   const { t } = useTranslation();
@@ -44,4 +43,4 @@ function App() {
   );
 }
 
-export default App;
+export default Home;
