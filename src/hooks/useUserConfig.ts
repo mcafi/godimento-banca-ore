@@ -27,17 +27,17 @@ export function useUserConfig() {
 
     // Inizializza il percorso del file di configurazione e carica la configurazione all'avvio
     useEffect(() => {
+        console.log("useUserConfig: useEffect");
         async function initConfig() {
             try {
                 const appDataDir = await appLocalDataDir();
-                const configDirPath = await join(appDataDir, "banca-ore");
 
                 // Crea la directory se non esiste
-                if (!(await exists(configDirPath))) {
-                    await mkdir(configDirPath, { recursive: true });
+                if (!(await exists(appDataDir))) {
+                    await mkdir(appDataDir, { recursive: true });
                 }
 
-                const configFilePath = await join(configDirPath, "config.json");
+                const configFilePath = await join(appDataDir, "config.json");
                 setConfigPath(configFilePath);
 
                 const fileExists = await exists(configFilePath);

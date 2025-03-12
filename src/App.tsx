@@ -1,11 +1,14 @@
 import { open, message } from "@tauri-apps/plugin-dialog";
 
 import "./App.css";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { Button } from "./components/Button";
+import { useTranslation } from "react-i18next";
 
 function App() {
   let navigate = useNavigate();
+
+  const { t } = useTranslation();
 
   async function openFile() {
     const selectedFile = await open({
@@ -35,12 +38,7 @@ function App() {
   return (
     <main className="bg-primary-950 min-h-screen p-4">
       <div className="flex flex-col items-center justify-center h-full py-10 gap-5">
-        <Button onClick={openFile}>Clicca per selezionare un file</Button>
-        <div>
-          <Link to="/settings" className="text-primary-200 hover:underline">
-            <Button variant="secondary">Impostazioni</Button>
-          </Link>
-        </div>
+        <Button onClick={openFile}>{t("home.select_file")}</Button>
       </div>
     </main>
   );
