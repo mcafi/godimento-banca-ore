@@ -2,14 +2,7 @@ import { useState, useEffect } from 'react';
 import { readTextFile, writeTextFile, exists, mkdir } from "@tauri-apps/plugin-fs";
 import { message } from "@tauri-apps/plugin-dialog";
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
-
-export type UserConfig = {
-    dateFormatInput: string;
-    dateFormatOutput: string;
-    useSameFormatAsInput: boolean;
-    codeBancaOre: string;
-    includeZeroDays: boolean;
-}
+import { UserConfig } from '@/types/UserConfig';
 
 const defaultConfig: UserConfig = {
     dateFormatInput: "yyyy-MM-dd",
@@ -27,7 +20,6 @@ export function useUserConfig() {
 
     // Inizializza il percorso del file di configurazione e carica la configurazione all'avvio
     useEffect(() => {
-        console.log("useUserConfig: useEffect");
         async function initConfig() {
             try {
                 const appDataDir = await appLocalDataDir();

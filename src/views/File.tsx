@@ -123,6 +123,8 @@ const File: React.FC = () => {
 
         const dipendente = file?.Fornitura.Dipendente[i];
 
+        const weeklyMinutes = 40 * 60;
+
         if (!dipendente) continue;
 
         const codAziendaUfficiale = dipendente["@_CodAziendaUfficiale"];
@@ -155,33 +157,51 @@ const File: React.FC = () => {
           const weeksDifference = differenceInWeeks(date, startDate);
 
           if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
-            month[weeksDifference][day] += movimento.NumOre;
+            month[weeksDifference][day] += movimento.NumOre * 60;
+            if (movimento.NumMinuti) {
+              month[weeksDifference][day] += movimento.NumMinuti;
+            }
           }
         });
 
         month.forEach((week, index) => {
           for (let k = 0; k < 7; k++) {
-            const reminder = 40 - week.reduce((acc, curr) => acc + curr, 0);
+            const reminder =
+              weeklyMinutes - week.reduce((acc, curr) => acc + curr, 0);
 
-            const hoursToAdd =
+            const dailyHours = 8 * 60;
+
+            const minutesToAdd =
               k == 0 || reminder <= 0
                 ? 0
-                : Math.min(Math.max(8 - week[k], 0), Math.max(reminder, 0));
+                : Math.min(
+                    Math.max(dailyHours - week[k], 0),
+                    Math.max(reminder, 0)
+                  );
 
-            week[k] += hoursToAdd;
+            week[k] += minutesToAdd;
 
-            if (!config.includeZeroDays && hoursToAdd <= 0) continue;
+            if (!config.includeZeroDays && minutesToAdd <= 0) continue;
 
-            newMovimenti.push({
+            const hours = Math.floor(minutesToAdd / 60);
+            const minutes = minutesToAdd % 60;
+
+            const newMovimento: Movimento = {
               CodGiustificativoUfficiale: newCode,
               Data: formatDate(
                 addDays(currentStartDate, index * 7 + k - 1),
                 config.dateFormatOutput
               ),
-              NumOre: hoursToAdd,
+              NumOre: hours,
               GiornoDiRiposo: "N",
               GiornoChiusuraStraordinari: "N",
-            });
+            };
+
+            if (minutes > 0) {
+              newMovimento.NumMinuti = minutes;
+            }
+
+            newMovimenti.push(newMovimento);
           }
         });
 
