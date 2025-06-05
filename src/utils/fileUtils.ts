@@ -2,9 +2,14 @@ import { XmlFile } from "@/types/XmlFile";
 import { readFile, writeTextFile } from "@tauri-apps/plugin-fs";
 import { XMLBuilder, XMLParser } from "fast-xml-parser";
 
+const alwaysArray = [
+    "Movimento",
+];
+
 const xmlParserOptions = {
     ignoreAttributes: false,
     attributeNamePrefix: "@_",
+    isArray: (tagName: string) => alwaysArray.includes(tagName),
 };
 
 export async function readAndParseXml(path: string | null): Promise<XmlFile> {

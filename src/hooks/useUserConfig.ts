@@ -10,6 +10,8 @@ const defaultConfig: UserConfig = {
     useSameFormatAsInput: true,
     codeBancaOre: "BO",
     includeZeroDays: false,
+    companies: {},
+    employers: {},
 };
 
 export function useUserConfig() {

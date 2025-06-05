@@ -14,8 +14,6 @@ const Settings: React.FC = () => {
   const [version, setVersion] = useState<string>("");
 
   useEffect(() => {
-    console.log("Settings: useEffect");
-    console.log("config", config);
     async function fetchAppInfo() {
       try {
         const name = await getName();

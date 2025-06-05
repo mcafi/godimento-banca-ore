@@ -14,6 +14,7 @@ import {
   getMonth,
   addWeeks,
   differenceInWeeks,
+  differenceInMonths,
 } from "date-fns";
 
 import { it } from "date-fns/locale/it";
@@ -87,13 +88,19 @@ const File: React.FC = () => {
 
       if (!actualStartDate) return;
 
-      subDays(actualStartDate, getDay(actualStartDate) - 1);
+      const mondayStartDate = subDays(
+        actualStartDate,
+        getDay(actualStartDate) - 1
+      );
 
-      setStartDate(actualStartDate);
+      setStartDate(mondayStartDate);
 
-      let endDate = actualStartDate;
+      let endDate = mondayStartDate;
 
-      while (getMonth(endDate) === getMonth(actualStartDate)) {
+      while (
+        getMonth(endDate) === getMonth(mondayStartDate) ||
+        differenceInMonths(endDate, actualStartDate) < 1
+      ) {
         endDate = addWeeks(endDate, 1);
       }
 

@@ -80,6 +80,7 @@ export function useFileHistory() {
     }
 
     // Salva la cronologia nel file
+    /*
     async function saveHistory() {
         if (!historyPath) return;
 
@@ -95,6 +96,7 @@ export function useFileHistory() {
             setIsLoading(false);
         }
     }
+        */
 
     // Aggiunge un file alla cronologia
     async function addFileToHistory(filePath: string) {
