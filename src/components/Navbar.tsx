@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router";
 import { Tooltip } from "@material-tailwind/react";
 import { BaselineHistory } from "@/icons/BaselineHistory";
+import { OutlinePeople } from "@/icons/OutlinePeople";
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
@@ -38,6 +39,20 @@ const Navbar: React.FC = () => {
             }
           >
             <BaselineHistory className="size-8" />
+          </NavLink>
+        </Tooltip>
+        <Tooltip
+          placement="right"
+          className="bg-primary-400 ml-5"
+          content={t("companies")}
+        >
+          <NavLink
+            to="/companies"
+            className={({ isActive }) =>
+              clsx("text-primary-400", { "text-white": isActive })
+            }
+          >
+            <OutlinePeople className="size-8" />
           </NavLink>
         </Tooltip>
       </div>
