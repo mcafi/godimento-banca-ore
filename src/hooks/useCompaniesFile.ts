@@ -49,13 +49,16 @@ export function useCompaniesFile() {
         const updatedConfig = { ...config };
 
         newEntries.forEach(entry => {
-            if (!updatedConfig[entry["Codice azienda"]]) {
-                updatedConfig[entry["Codice azienda"]] = {
+            const codiceAzienda = entry["Codice azienda"];
+            const codiceDipendente = entry["Dipendente"];
+
+            if (!updatedConfig[codiceAzienda]) {
+                updatedConfig[codiceAzienda] = {
                     denominazione: entry["Denominazione"],
                     dipendenti: {}
                 };
             }
-            updatedConfig[entry["Codice azienda"]].dipendenti[entry["Dipendente"]] = {
+            updatedConfig[codiceAzienda].dipendenti[codiceDipendente] = {
                 nome: entry["Nome"],
                 cognome: entry["Cognome"],
                 codiceFiscale: entry["Codice fiscale"],

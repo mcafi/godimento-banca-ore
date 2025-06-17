@@ -22,6 +22,7 @@ import { useUserConfig } from "@/hooks/useUserConfig";
 import { readAndParseXml, writeXmlFile } from "@/utils/fileUtils";
 import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
+import { useCompaniesFile } from "@/hooks/useCompaniesFile";
 
 const File: React.FC = () => {
   const [searchParams] = useSearchParams();
@@ -52,6 +53,8 @@ const File: React.FC = () => {
   }, [file]);
 
   const { config } = useUserConfig();
+
+  const { config: companyConfig } = useCompaniesFile();
 
   async function readExcelFile() {
     try {
@@ -130,12 +133,17 @@ const File: React.FC = () => {
 
         const dipendente = file?.Fornitura.Dipendente[i];
 
-        const weeklyMinutes = 40 * 60;
-
         if (!dipendente) continue;
 
         const codAziendaUfficiale = dipendente["@_CodAziendaUfficiale"];
         const codDipendenteUfficiale = dipendente["@_CodDipendenteUfficiale"];
+        const hiringDay =
+          companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
+            ?.dataAssunzione ?? "01/01/2000";
+
+        const hiringDate = parse(hiringDay, "dd/MM/yyyy", new Date());
+
+        const weeklyMinutes = 40 * 60;
 
         const movimenti = dipendente?.Movimenti.Movimento;
 
@@ -161,6 +169,10 @@ const File: React.FC = () => {
 
           if (!currentStartDate) return;
 
+          if (isBefore(date, hiringDate)) {
+            return;
+          }
+
           const weeksDifference = differenceInWeeks(date, startDate);
 
           if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
@@ -173,20 +185,29 @@ const File: React.FC = () => {
 
         month.forEach((week, index) => {
           for (let k = 0; k < 7; k++) {
+            if (
+              isBefore(addDays(currentStartDate, index * 7 + k - 1), hiringDate)
+            ) {
+              continue;
+            }
+
+            let dayIndex = k + 1;
+            if (dayIndex == 7) dayIndex = 0; // Adjust for Sunday
+
             const reminder =
               weeklyMinutes - week.reduce((acc, curr) => acc + curr, 0);
 
             const dailyHours = 8 * 60;
 
             const minutesToAdd =
-              k == 0 || reminder <= 0
+              reminder <= 0
                 ? 0
                 : Math.min(
-                    Math.max(dailyHours - week[k], 0),
+                    Math.max(dailyHours - week[dayIndex], 0),
                     Math.max(reminder, 0)
                   );
 
-            week[k] += minutesToAdd;
+            week[dayIndex] += minutesToAdd;
 
             if (!config.includeZeroDays && minutesToAdd <= 0) continue;
 
@@ -196,7 +217,7 @@ const File: React.FC = () => {
             const newMovimento: Movimento = {
               CodGiustificativoUfficiale: newCode,
               Data: formatDate(
-                addDays(currentStartDate, index * 7 + k - 1),
+                addDays(currentStartDate, index * 7 + dayIndex - 1),
                 config.dateFormatOutput
               ),
               NumOre: hours,
@@ -217,8 +238,8 @@ const File: React.FC = () => {
             "@_GenerazioneAutomaticaDaTeorico": "N",
             Movimento: newMovimenti,
           },
-          "@_CodAziendaUfficiale": codAziendaUfficiale,
-          "@_CodDipendenteUfficiale": codDipendenteUfficiale,
+          "@_CodAziendaUfficiale": `${codAziendaUfficiale}`,
+          "@_CodDipendenteUfficiale": `${codDipendenteUfficiale}`,
         });
       }
 

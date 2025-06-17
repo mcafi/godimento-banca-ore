@@ -1,6 +1,6 @@
 export type Azienda = {
     denominazione: string;
-    dipendenti: Record<number, {
+    dipendenti: Record<string, {
         nome: string;
         cognome: string;
         codiceFiscale: string;

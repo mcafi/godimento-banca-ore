@@ -1,16 +1,12 @@
 import { Button } from "../components/Button";
 import { open, message } from "@tauri-apps/plugin-dialog";
 
-import { useTranslation } from "react-i18next";
-
 import Papa from "papaparse";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useCompaniesFile } from "@/hooks/useCompaniesFile";
 import { CompanyCSVEntry } from "@/types/CompanyCSVEntry";
 
 const Companies: React.FC = () => {
-  const { t } = useTranslation();
-
   const { config, patchConfig } = useCompaniesFile();
 
   async function openFile() {
