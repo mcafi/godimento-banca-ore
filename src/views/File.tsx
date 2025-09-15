@@ -233,6 +233,8 @@ const File: React.FC = () => {
           }
         });
 
+        if (newMovimenti.length === 0) continue;
+
         newFile.Fornitura.Dipendente.push({
           Movimenti: {
             "@_GenerazioneAutomaticaDaTeorico": "N",
