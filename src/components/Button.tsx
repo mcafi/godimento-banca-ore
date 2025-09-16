@@ -18,7 +18,8 @@ export const Button: React.FC<ButtonProps> = ({
       type="button"
       className={clsx(
         "text-white px-4 py-2 rounded-lg hover:cursor-pointer transition-all",
-        buttonClass
+        buttonClass,
+        props.className
       )}
       {...props}
     >

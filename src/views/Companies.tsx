@@ -5,6 +5,7 @@ import Papa from "papaparse";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useCompaniesFile } from "@/hooks/useCompaniesFile";
 import { CompanyCSVEntry } from "@/types/CompanyCSVEntry";
+import { useMemo } from "react";
 
 const Companies: React.FC = () => {
   const { config, patchConfig } = useCompaniesFile();
@@ -31,8 +32,6 @@ const Companies: React.FC = () => {
       return;
     }
 
-    console.log("File selezionato:", selectedFile);
-
     const csvContent = await readTextFile(selectedFile as string);
     const parsed = Papa.parse(csvContent, {
       header: true,
@@ -42,14 +41,65 @@ const Companies: React.FC = () => {
     patchConfig(parsed.data as CompanyCSVEntry[]);
   }
 
+  const hasCompanies = useMemo(() => {
+    return Object.keys(config).length > 0;
+  }, [config]);
+
   return (
     <main className="bg-primary-950 min-h-screen p-4 text-white">
-      <h1>Date di assunzione e cessazione</h1>
+      <h1 className="text-2xl font-bold">Date di assunzione e cessazione</h1>
       <div>
-        <Button onClick={openFile}>
-          Importa date di assunzione/cessazione
-        </Button>
-        <div>{JSON.stringify(config, null, 2)}</div>
+        <div className="my-4">
+          <Button onClick={openFile}>
+            Importa date di assunzione/cessazione
+          </Button>
+        </div>
+        {hasCompanies && (
+          <>
+            <h2 className="text-xl font-bold">Elenco aziende</h2>
+            {Object.keys(config).map((azienda) => (
+              <div key={azienda}>
+                <h3 className="text-lg font-semibold">
+                  {config[azienda].denominazione}
+                </h3>
+                <table className="min-w-full table-auto border border-gray-300 my-2">
+                  <thead>
+                    <tr>
+                      <th className="border-b p-2 text-left">Identificativo</th>
+                      <th className="border-b p-2 text-left">Nome</th>
+                      <th className="border-b p-2 text-left">Cognome</th>
+                      <th className="border-b p-2 text-left">
+                        Data di assunzione
+                      </th>
+                      <th className="border-b p-2 text-left">
+                        Data di cessazione
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {Object.keys(config[azienda].dipendenti).map((id) => (
+                      <tr key={id}>
+                        <td className="border-b p-2">{id}</td>
+                        <td className="border-b p-2">
+                          {config[azienda].dipendenti[id].nome}
+                        </td>
+                        <td className="border-b p-2">
+                          {config[azienda].dipendenti[id].cognome}
+                        </td>
+                        <td className="border-b p-2">
+                          {config[azienda].dipendenti[id].dataAssunzione}
+                        </td>
+                        <td className="border-b p-2">
+                          {config[azienda].dipendenti[id].dataCessazione}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ))}
+          </>
+        )}
       </div>
     </main>
   );
