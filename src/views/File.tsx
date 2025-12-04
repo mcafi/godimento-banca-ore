@@ -143,6 +143,14 @@ const File: React.FC = () => {
 
         const hiringDate = parse(hiringDay, "dd/MM/yyyy", new Date());
 
+        const terminationDay =
+          companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
+            ?.dataCessazione;
+
+        const terminationDate = terminationDay
+          ? parse(terminationDay, "dd/MM/yyyy", new Date())
+          : null;
+
         const weeklyMinutes = 40 * 60;
 
         const movimenti = dipendente?.Movimenti.Movimento;
@@ -173,6 +181,10 @@ const File: React.FC = () => {
             return;
           }
 
+          if (terminationDate && !isBefore(date, terminationDate)) {
+            return;
+          }
+
           const weeksDifference = differenceInWeeks(date, startDate);
 
           if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
@@ -185,9 +197,13 @@ const File: React.FC = () => {
 
         month.forEach((week, index) => {
           for (let k = 0; k < 7; k++) {
-            if (
-              isBefore(addDays(currentStartDate, index * 7 + k - 1), hiringDate)
-            ) {
+            const currentDate = addDays(currentStartDate, index * 7 + k - 1);
+
+            if (isBefore(currentDate, hiringDate)) {
+              continue;
+            }
+
+            if (terminationDate && !isBefore(currentDate, terminationDate)) {
               continue;
             }
 
