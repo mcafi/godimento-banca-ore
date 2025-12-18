@@ -56,6 +56,15 @@ const File: React.FC = () => {
 
   const { config: companyConfig } = useCompaniesFile();
 
+  const loadedCompany = useMemo(() => {
+    return codiciAziende.map((codice) => companyConfig[codice])[0];
+  }, [codiciAziende, companyConfig]);
+
+  const loadedEmployees = useMemo(() => {
+    if (!loadedCompany) return [];
+    return codiciDipendenti.map((codice) => loadedCompany.dipendenti[codice]);
+  }, [codiciDipendenti, loadedCompany]);
+
   async function readExcelFile() {
     try {
       const parsedFile = await readAndParseXml(path);
@@ -118,11 +127,8 @@ const File: React.FC = () => {
     }
   }
 
-  async function saveXmlFile() {
-    try {
-      const fullPath = `${path}`;
+  function calculateBancaOre() {
       const newCode = config.codeBancaOre;
-
       const numberOfDipendenti = file?.Fornitura.Dipendente.length ?? 0;
 
       const newFile = getEmptyXml();
@@ -137,6 +143,7 @@ const File: React.FC = () => {
 
         const codAziendaUfficiale = dipendente["@_CodAziendaUfficiale"];
         const codDipendenteUfficiale = dipendente["@_CodDipendenteUfficiale"];
+
         const hiringDay =
           companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
             ?.dataAssunzione ?? "01/01/2000";
@@ -155,9 +162,9 @@ const File: React.FC = () => {
 
         const movimenti = dipendente?.Movimenti.Movimento;
 
-        const newMovimenti: Movimento[] = [];
-
         if (!movimenti) continue;
+        
+        const newMovimenti: Movimento[] = [];
 
         let currentStartDate: Date = startDate;
 
@@ -260,6 +267,14 @@ const File: React.FC = () => {
           "@_CodDipendenteUfficiale": `${codDipendenteUfficiale}`,
         });
       }
+      return newFile;
+  }
+
+  async function saveXmlFile() {
+    try {
+      const fullPath = `${path}`;
+
+      const fileToWrite = calculateBancaOre();
 
       const savePath = await save({
         defaultPath: fullPath.replace(".xml", "-new.xml"),
@@ -274,7 +289,7 @@ const File: React.FC = () => {
       if (!savePath) return;
 
       // Salva il nuovo XML nel file
-      await writeXmlFile(savePath, newFile);
+      await writeXmlFile(savePath, fileToWrite);
 
       message("File salvato con successo.", {
         title: "Successo",
@@ -318,14 +333,14 @@ const File: React.FC = () => {
               (escluso)
             </p>
           )}
-          {codiciAziende && (
+          {loadedCompany && (
             <div>
-              <p className="mb-2">Aziende: {codiciAziende.join(", ")}</p>
+              <p className="mb-2">Aziende: {loadedCompany.denominazione}</p>
             </div>
           )}
           {codiciDipendenti && (
             <div>
-              <p className="mb-2">Dipendenti: {codiciDipendenti.join(", ")}</p>
+              <p className="mb-2">Dipendenti: {loadedEmployees.map((dipendente) => `${dipendente.nome} ${dipendente.cognome} (${dipendente.codiceFiscale})`).join(", ")}</p>
             </div>
           )}
           <div>
