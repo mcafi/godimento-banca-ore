@@ -44,7 +44,7 @@ export function useCompaniesFile() {
         initConfig();
     }, []);
 
-    async function patchConfig(newEntries: CompanyCSVEntry[]) {
+    async function patchConfig(newEntries: CompanyCSVEntry[], defaultWeeklyHours: number) {
 
         const updatedConfig: CompanyConfig = { ...config };
 
@@ -64,7 +64,7 @@ export function useCompaniesFile() {
                 codiceFiscale: entry["Codice fiscale"],
                 dataAssunzione: entry["Data assunzione"],
                 dataCessazione: entry["Data cessazione"],
-                oreSettimanali: entry["Ore settimanali"] ?? 40
+                oreSettimanali: entry["Ore settimanali"] ?? defaultWeeklyHours
             };
         })
 

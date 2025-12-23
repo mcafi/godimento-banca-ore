@@ -158,7 +158,10 @@ const File: React.FC = () => {
         ? parse(terminationDay, "dd/MM/yyyy", new Date())
         : null;
 
-      const weeklyMinutes = 40 * 60;
+      const weeklyHours =
+        companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
+          ?.oreSettimanali ?? config.defaultWeeklyHours;
+      const weeklyMinutes = weeklyHours * 60;
 
       const movimenti = dipendente?.Movimenti.Movimento;
 
@@ -220,7 +223,7 @@ const File: React.FC = () => {
           const reminder =
             weeklyMinutes - week.reduce((acc, curr) => acc + curr, 0);
 
-          const dailyHours = 8 * 60;
+          const dailyHours = weeklyMinutes / 5;
 
           const minutesToAdd =
             reminder <= 0
@@ -351,7 +354,6 @@ const File: React.FC = () => {
         </div>
         <div className="mb-4">
           <h2 className="text-lg mb-2">Opzioni</h2>
-          <p>Ore settimanali: 40</p>
           <p>Codice banca ore: {config.codeBancaOre}</p>
           <p className="mb-2">Codici da includere nel calcolo:</p>
           <div className="flex flex-col gap-1">

@@ -7,8 +7,11 @@ import { useCompaniesFile } from "@/hooks/useCompaniesFile";
 import { CompanyCSVEntry } from "@/types/CompanyCSVEntry";
 import { useMemo } from "react";
 
+import { useAppConfig } from "@/hooks/useAppConfig";
+
 const Companies: React.FC = () => {
   const { config, patchConfig, resetConfig } = useCompaniesFile();
+  const { config: appConfig } = useAppConfig();
 
   async function openFile() {
     const selectedFile = await open({
@@ -38,7 +41,7 @@ const Companies: React.FC = () => {
       skipEmptyLines: true,
     });
 
-    patchConfig(parsed.data as CompanyCSVEntry[]);
+    patchConfig(parsed.data as CompanyCSVEntry[], appConfig.defaultWeeklyHours);
   }
 
   const hasCompanies = useMemo(() => {
