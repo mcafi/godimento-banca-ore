@@ -6,5 +6,6 @@ export type Azienda = {
         codiceFiscale: string;
         dataAssunzione: string;
         dataCessazione: string | null;
+        oreSettimanali: number;
     }>
 }

@@ -46,7 +46,7 @@ export function useCompaniesFile() {
 
     async function patchConfig(newEntries: CompanyCSVEntry[]) {
 
-        const updatedConfig = { ...config };
+        const updatedConfig: CompanyConfig = { ...config };
 
         newEntries.forEach(entry => {
             const codiceAzienda = entry["Codice azienda"];
@@ -63,7 +63,8 @@ export function useCompaniesFile() {
                 cognome: entry["Cognome"],
                 codiceFiscale: entry["Codice fiscale"],
                 dataAssunzione: entry["Data assunzione"],
-                dataCessazione: entry["Data cessazione"]
+                dataCessazione: entry["Data cessazione"],
+                oreSettimanali: entry["Ore settimanali"] ?? 40
             };
         })
 
@@ -112,8 +113,6 @@ export function useCompaniesFile() {
 
             const configString = JSON.stringify(newConfig, null, 2);
             await writeTextFile(configPath, configString);
-
-            console.log(configPath)
 
             await message("Configurazione salvata con successo", {
                 title: "Successo",

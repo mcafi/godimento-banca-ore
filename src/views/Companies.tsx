@@ -8,7 +8,7 @@ import { CompanyCSVEntry } from "@/types/CompanyCSVEntry";
 import { useMemo } from "react";
 
 const Companies: React.FC = () => {
-  const { config, patchConfig } = useCompaniesFile();
+  const { config, patchConfig, resetConfig } = useCompaniesFile();
 
   async function openFile() {
     const selectedFile = await open({
@@ -47,11 +47,11 @@ const Companies: React.FC = () => {
 
   return (
     <main className="bg-primary-950 min-h-screen p-4 text-white">
-      <h1 className="text-2xl font-bold">Date di assunzione e cessazione</h1>
+      <h1 className="text-2xl font-bold">Aziende e dipendenti configurati</h1>
       <div>
         <div className="my-4">
           <Button onClick={openFile}>
-            Importa date di assunzione/cessazione
+            Clicca per importare un file (formato CSV)
           </Button>
         </div>
         {hasCompanies && (
@@ -74,6 +74,9 @@ const Companies: React.FC = () => {
                       <th className="border-b p-2 text-left">
                         Data di cessazione
                       </th>
+                      <th className="border-b p-2 text-left">
+                        Ore settimanali
+                      </th>
                     </tr>
                   </thead>
                   <tbody>
@@ -92,6 +95,9 @@ const Companies: React.FC = () => {
                         <td className="border-b p-2">
                           {config[azienda].dipendenti[id].dataCessazione}
                         </td>
+                        <td className="border-b p-2">
+                          {config[azienda].dipendenti[id].oreSettimanali}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -100,6 +106,7 @@ const Companies: React.FC = () => {
             ))}
           </>
         )}
+        <Button onClick={resetConfig}>Ripristina configurazione</Button>
       </div>
     </main>
   );

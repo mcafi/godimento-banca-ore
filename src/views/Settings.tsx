@@ -1,4 +1,4 @@
-import { useUserConfig } from "@/hooks/useUserConfig";
+import { useAppConfig } from "@/hooks/useAppConfig";
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
 import { Button } from "@/components/Button";
@@ -6,7 +6,7 @@ import { getName, getVersion } from "@tauri-apps/api/app";
 import { useTranslation } from "react-i18next";
 
 const Settings: React.FC = () => {
-  const { config, updateConfig, resetConfig, saveConfig } = useUserConfig();
+  const { config, updateConfig, resetConfig, saveConfig } = useAppConfig();
 
   const { t } = useTranslation();
 

@@ -9,4 +9,5 @@ export type CompanyCSVEntry = {
     "Codice fiscale": string,
     "Data assunzione": string,
     "Data cessazione": string,
+    "Ore settimanali"?: number,
 }

@@ -2,20 +2,19 @@ import { useState, useEffect } from 'react';
 import { readTextFile, writeTextFile, exists, mkdir } from "@tauri-apps/plugin-fs";
 import { message } from "@tauri-apps/plugin-dialog";
 import { appLocalDataDir, join } from "@tauri-apps/api/path";
-import { UserConfig } from '@/types/UserConfig';
+import { AppConfig } from '@/types/AppConfig';
 
-const defaultConfig: UserConfig = {
+const defaultConfig: AppConfig = {
     dateFormatInput: "yyyy-MM-dd",
     dateFormatOutput: "yyyy-MM-dd",
     useSameFormatAsInput: true,
     codeBancaOre: "BO",
     includeZeroDays: false,
-    companies: {},
-    employers: {},
+    defaultWeeklyHours: 40,
 };
 
-export function useUserConfig() {
-    const [config, setConfig] = useState<UserConfig>(defaultConfig);
+export function useAppConfig() {
+    const [config, setConfig] = useState<AppConfig>(defaultConfig);
     const [configPath, setConfigPath] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
@@ -109,7 +108,7 @@ export function useUserConfig() {
     }
 
     // Aggiorna la configurazione in memoria
-    function updateConfig(newConfig: Partial<UserConfig>) {
+    function updateConfig(newConfig: Partial<AppConfig>) {
         setConfig({ ...config, ...newConfig });
     }
 

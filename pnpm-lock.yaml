@@ -686,9 +686,6 @@ packages:
   '@tauri-apps/plugin-opener@2.5.2':
     resolution: {integrity: sha512-ei/yRRoCklWHImwpCcDK3VhNXx+QXM9793aQ64YxpqVF0BDuuIlXhZgiAkc15wnPVav+IbkYhmDJIv5R326Mew==}
 
-  '@tauri-apps/plugin-store@2.2.1':
-    resolution: {integrity: sha512-/hPafeliMe0tMc8NB9tSlkAH+Ww3H7BGD8NycjfY6QBM//0jSoqCO1QGdngPxugeF5NgUNspsVkpvpTz1lLAVQ==}
-
   '@tauri-apps/plugin-store@2.4.1':
     resolution: {integrity: sha512-ckGSEzZ5Ii4Hf2D5x25Oqnm2Zf9MfDWAzR+volY0z/OOBz6aucPKEY0F649JvQ0Vupku6UJo7ugpGRDOFOunkA==}
 
@@ -1644,10 +1641,6 @@ snapshots:
     dependencies:
       '@tauri-apps/api': 2.9.1
 
-  '@tauri-apps/plugin-store@2.2.1':
-    dependencies:
-      '@tauri-apps/api': 2.9.1
-
   '@tauri-apps/plugin-store@2.4.1':
     dependencies:
       '@tauri-apps/api': 2.9.1
@@ -1820,7 +1813,7 @@ snapshots:
       '@tauri-apps/plugin-dialog': 2.4.2
       '@tauri-apps/plugin-fs': 2.4.4
       '@tauri-apps/plugin-opener': 2.5.2
-      '@tauri-apps/plugin-store': 2.2.1
+      '@tauri-apps/plugin-store': 2.4.1
       clsx: 2.1.1
       date-fns: 4.1.0
       fast-xml-parser: 5.3.2

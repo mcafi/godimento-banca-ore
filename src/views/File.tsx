@@ -18,7 +18,7 @@ import {
 } from "date-fns";
 
 import { it } from "date-fns/locale/it";
-import { useUserConfig } from "@/hooks/useUserConfig";
+import { useAppConfig } from "@/hooks/useAppConfig";
 import { readAndParseXml, writeXmlFile } from "@/utils/fileUtils";
 import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
@@ -52,7 +52,7 @@ const File: React.FC = () => {
     return Array.from(new Set(dipendenti));
   }, [file]);
 
-  const { config } = useUserConfig();
+  const { config } = useAppConfig();
 
   const { config: companyConfig } = useCompaniesFile();
 
@@ -128,146 +128,146 @@ const File: React.FC = () => {
   }
 
   function calculateBancaOre() {
-      const newCode = config.codeBancaOre;
-      const numberOfDipendenti = file?.Fornitura.Dipendente.length ?? 0;
+    const newCode = config.codeBancaOre;
+    const numberOfDipendenti = file?.Fornitura.Dipendente.length ?? 0;
 
-      const newFile = getEmptyXml();
-      newFile.Fornitura.Dipendente = [];
+    const newFile = getEmptyXml();
+    newFile.Fornitura.Dipendente = [];
 
-      for (let i = 0; i < numberOfDipendenti; i++) {
-        if (!startDate || !endDate) continue;
+    for (let i = 0; i < numberOfDipendenti; i++) {
+      if (!startDate || !endDate) continue;
 
-        const dipendente = file?.Fornitura.Dipendente[i];
+      const dipendente = file?.Fornitura.Dipendente[i];
 
-        if (!dipendente) continue;
+      if (!dipendente) continue;
 
-        const codAziendaUfficiale = dipendente["@_CodAziendaUfficiale"];
-        const codDipendenteUfficiale = dipendente["@_CodDipendenteUfficiale"];
+      const codAziendaUfficiale = dipendente["@_CodAziendaUfficiale"];
+      const codDipendenteUfficiale = dipendente["@_CodDipendenteUfficiale"];
 
-        const hiringDay =
-          companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
-            ?.dataAssunzione ?? "01/01/2000";
+      const hiringDay =
+        companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
+          ?.dataAssunzione ?? "01/01/2000";
 
-        const hiringDate = parse(hiringDay, "dd/MM/yyyy", new Date());
+      const hiringDate = parse(hiringDay, "dd/MM/yyyy", new Date());
 
-        const terminationDay =
-          companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
-            ?.dataCessazione;
+      const terminationDay =
+        companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
+          ?.dataCessazione;
 
-        const terminationDate = terminationDay
-          ? parse(terminationDay, "dd/MM/yyyy", new Date())
-          : null;
+      const terminationDate = terminationDay
+        ? parse(terminationDay, "dd/MM/yyyy", new Date())
+        : null;
 
-        const weeklyMinutes = 40 * 60;
+      const weeklyMinutes = 40 * 60;
 
-        const movimenti = dipendente?.Movimenti.Movimento;
+      const movimenti = dipendente?.Movimenti.Movimento;
 
-        if (!movimenti) continue;
-        
-        const newMovimenti: Movimento[] = [];
+      if (!movimenti) continue;
 
-        let currentStartDate: Date = startDate;
+      const newMovimenti: Movimento[] = [];
 
-        let weeksInterval = differenceInWeeks(endDate, startDate);
+      let currentStartDate: Date = startDate;
 
-        const month = Array.from({ length: weeksInterval }, () =>
-          new Array(7).fill(0)
+      let weeksInterval = differenceInWeeks(endDate, startDate);
+
+      const month = Array.from({ length: weeksInterval }, () =>
+        new Array(7).fill(0)
+      );
+
+      movimenti.forEach((movimento) => {
+        const date = parse(
+          movimento.Data,
+          config.dateFormatInput,
+          new Date()
         );
+        const day = getDay(date);
 
-        movimenti.forEach((movimento) => {
-          const date = parse(
-            movimento.Data,
-            config.dateFormatInput,
-            new Date()
-          );
-          const day = getDay(date);
+        if (!currentStartDate) return;
 
-          if (!currentStartDate) return;
+        if (isBefore(date, hiringDate)) {
+          return;
+        }
 
-          if (isBefore(date, hiringDate)) {
-            return;
+        if (terminationDate && !isBefore(date, terminationDate)) {
+          return;
+        }
+
+        const weeksDifference = differenceInWeeks(date, startDate);
+
+        if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
+          month[weeksDifference][day] += movimento.NumOre * 60;
+          if (movimento.NumMinuti) {
+            month[weeksDifference][day] += movimento.NumMinuti;
+          }
+        }
+      });
+
+      month.forEach((week, index) => {
+        for (let k = 0; k < 7; k++) {
+          const currentDate = addDays(currentStartDate, index * 7 + k - 1);
+
+          if (isBefore(currentDate, hiringDate)) {
+            continue;
           }
 
-          if (terminationDate && !isBefore(date, terminationDate)) {
-            return;
+          if (terminationDate && !isBefore(currentDate, terminationDate)) {
+            continue;
           }
 
-          const weeksDifference = differenceInWeeks(date, startDate);
+          let dayIndex = k + 1;
+          if (dayIndex == 7) dayIndex = 0; // Adjust for Sunday
 
-          if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
-            month[weeksDifference][day] += movimento.NumOre * 60;
-            if (movimento.NumMinuti) {
-              month[weeksDifference][day] += movimento.NumMinuti;
-            }
+          const reminder =
+            weeklyMinutes - week.reduce((acc, curr) => acc + curr, 0);
+
+          const dailyHours = 8 * 60;
+
+          const minutesToAdd =
+            reminder <= 0
+              ? 0
+              : Math.min(
+                Math.max(dailyHours - week[dayIndex], 0),
+                Math.max(reminder, 0)
+              );
+
+          week[dayIndex] += minutesToAdd;
+
+          if (!config.includeZeroDays && minutesToAdd <= 0) continue;
+
+          const hours = Math.floor(minutesToAdd / 60);
+          const minutes = minutesToAdd % 60;
+
+          const newMovimento: Movimento = {
+            CodGiustificativoUfficiale: newCode,
+            Data: formatDate(
+              addDays(currentStartDate, index * 7 + dayIndex - 1),
+              config.dateFormatOutput
+            ),
+            NumOre: hours,
+            GiornoDiRiposo: "N",
+            GiornoChiusuraStraordinari: "N",
+          };
+
+          if (minutes > 0) {
+            newMovimento.NumMinuti = minutes;
           }
-        });
 
-        month.forEach((week, index) => {
-          for (let k = 0; k < 7; k++) {
-            const currentDate = addDays(currentStartDate, index * 7 + k - 1);
+          newMovimenti.push(newMovimento);
+        }
+      });
 
-            if (isBefore(currentDate, hiringDate)) {
-              continue;
-            }
+      if (newMovimenti.length === 0) continue;
 
-            if (terminationDate && !isBefore(currentDate, terminationDate)) {
-              continue;
-            }
-
-            let dayIndex = k + 1;
-            if (dayIndex == 7) dayIndex = 0; // Adjust for Sunday
-
-            const reminder =
-              weeklyMinutes - week.reduce((acc, curr) => acc + curr, 0);
-
-            const dailyHours = 8 * 60;
-
-            const minutesToAdd =
-              reminder <= 0
-                ? 0
-                : Math.min(
-                    Math.max(dailyHours - week[dayIndex], 0),
-                    Math.max(reminder, 0)
-                  );
-
-            week[dayIndex] += minutesToAdd;
-
-            if (!config.includeZeroDays && minutesToAdd <= 0) continue;
-
-            const hours = Math.floor(minutesToAdd / 60);
-            const minutes = minutesToAdd % 60;
-
-            const newMovimento: Movimento = {
-              CodGiustificativoUfficiale: newCode,
-              Data: formatDate(
-                addDays(currentStartDate, index * 7 + dayIndex - 1),
-                config.dateFormatOutput
-              ),
-              NumOre: hours,
-              GiornoDiRiposo: "N",
-              GiornoChiusuraStraordinari: "N",
-            };
-
-            if (minutes > 0) {
-              newMovimento.NumMinuti = minutes;
-            }
-
-            newMovimenti.push(newMovimento);
-          }
-        });
-
-        if (newMovimenti.length === 0) continue;
-
-        newFile.Fornitura.Dipendente.push({
-          Movimenti: {
-            "@_GenerazioneAutomaticaDaTeorico": "N",
-            Movimento: newMovimenti,
-          },
-          "@_CodAziendaUfficiale": `${codAziendaUfficiale}`,
-          "@_CodDipendenteUfficiale": `${codDipendenteUfficiale}`,
-        });
-      }
-      return newFile;
+      newFile.Fornitura.Dipendente.push({
+        Movimenti: {
+          "@_GenerazioneAutomaticaDaTeorico": "N",
+          Movimento: newMovimenti,
+        },
+        "@_CodAziendaUfficiale": `${codAziendaUfficiale}`,
+        "@_CodDipendenteUfficiale": `${codDipendenteUfficiale}`,
+      });
+    }
+    return newFile;
   }
 
   async function saveXmlFile() {
