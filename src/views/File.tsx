@@ -35,19 +35,19 @@ const File: React.FC = () => {
   const [endDate, setEndDate] = useState<Date | null>(null);
 
   const [selectedCodes, setSelectedCodes] = useState<Array<string | number>>(
-    []
+    [],
   );
 
   const codiciAziende = useMemo(() => {
     const aziende = file?.Fornitura.Dipendente.map(
-      (dipendente) => dipendente["@_CodAziendaUfficiale"]
+      (dipendente) => dipendente["@_CodAziendaUfficiale"],
     );
     return Array.from(new Set(aziende));
   }, [file]);
 
   const codiciDipendenti = useMemo(() => {
     const dipendenti = file?.Fornitura.Dipendente.map(
-      (dipendente) => dipendente["@_CodDipendenteUfficiale"]
+      (dipendente) => dipendente["@_CodDipendenteUfficiale"],
     );
     return Array.from(new Set(dipendenti));
   }, [file]);
@@ -85,7 +85,7 @@ const File: React.FC = () => {
           const date = parse(
             dipendente.Movimenti.Movimento[0].Data,
             config.dateFormatInput,
-            new Date()
+            new Date(),
           );
 
           if (!actualStartDate || isBefore(date, actualStartDate)) {
@@ -102,7 +102,7 @@ const File: React.FC = () => {
 
       const mondayStartDate = subDays(
         actualStartDate,
-        getDay(actualStartDate) - 1
+        getDay(actualStartDate) - 1,
       );
 
       setStartDate(mondayStartDate);
@@ -174,15 +174,11 @@ const File: React.FC = () => {
       let weeksInterval = differenceInWeeks(endDate, startDate);
 
       const month = Array.from({ length: weeksInterval }, () =>
-        new Array(7).fill(0)
+        new Array(7).fill(0),
       );
 
       movimenti.forEach((movimento) => {
-        const date = parse(
-          movimento.Data,
-          config.dateFormatInput,
-          new Date()
-        );
+        const date = parse(movimento.Data, config.dateFormatInput, new Date());
         const day = getDay(date);
 
         if (!currentStartDate) return;
@@ -229,9 +225,9 @@ const File: React.FC = () => {
             reminder <= 0
               ? 0
               : Math.min(
-                Math.max(dailyHours - week[dayIndex], 0),
-                Math.max(reminder, 0)
-              );
+                  Math.max(dailyHours - week[dayIndex], 0),
+                  Math.max(reminder, 0),
+                );
 
           week[dayIndex] += minutesToAdd;
 
@@ -242,10 +238,7 @@ const File: React.FC = () => {
 
           const newMovimento: Movimento = {
             CodGiustificativoUfficiale: newCode,
-            Data: formatDate(
-              addDays(currentStartDate, index * 7 + dayIndex - 1),
-              config.dateFormatOutput
-            ),
+            Data: formatDate(addDays(currentDate, 1), config.dateFormatOutput),
             NumOre: hours,
             GiornoDiRiposo: "N",
             GiornoChiusuraStraordinari: "N",
@@ -343,7 +336,16 @@ const File: React.FC = () => {
           )}
           {codiciDipendenti && (
             <div>
-              <p className="mb-2">Dipendenti: {loadedEmployees.map((dipendente) => `${dipendente.nome} ${dipendente.cognome} (${dipendente.codiceFiscale})`).join(", ")}</p>
+              <p className="mb-2">
+                Dipendenti:{" "}
+                {loadedEmployees
+                  .map(
+                    (dipendente) =>
+                      dipendente &&
+                      `${dipendente.nome} ${dipendente.cognome} (${dipendente.codiceFiscale})`,
+                  )
+                  .join(", ")}
+              </p>
             </div>
           )}
           <div>
