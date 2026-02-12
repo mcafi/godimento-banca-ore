@@ -1,6 +1,6 @@
 [package]
 name = "godimento_banca_ore"
-version = "0.1.0"
+version = "0.1.1"
 description = "App che aiuta a calcolare le ore di dipendenti da inserirwe in banca ore"
 authors = ["mcafi"]
 edition = "2021"
@@ -25,4 +25,3 @@ serde_json = "1"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
 tauri-plugin-store = "2"
-
