@@ -35,7 +35,7 @@ function Home() {
   }
 
   return (
-    <main className="bg-primary-950 min-h-screen p-4">
+    <main className="bg-primary-950 min-h-screen p-5">
       <div className="flex flex-col items-center justify-center h-full py-10 gap-5">
         <Button onClick={openFile}>{t("home.select_file")}</Button>
       </div>

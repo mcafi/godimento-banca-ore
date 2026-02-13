@@ -1,5 +1,5 @@
 import { Button } from "../components/Button";
-import { open, message } from "@tauri-apps/plugin-dialog";
+import { open, message, ask } from "@tauri-apps/plugin-dialog";
 
 import Papa from "papaparse";
 import { readTextFile } from "@tauri-apps/plugin-fs";
@@ -48,13 +48,26 @@ const Companies: React.FC = () => {
     return Object.keys(config).length > 0;
   }, [config]);
 
+  async function handleResetConfig() {
+    const confirmed = await ask(
+      "Sei sicuro di voler ripristinare la configurazione delle aziende?",
+      {
+        title: "Conferma reset",
+        kind: "warning",
+      },
+    );
+    if (confirmed) {
+      resetConfig();
+    }
+  }
+
   return (
-    <main className="bg-primary-950 min-h-screen p-4 text-white">
-      <h1 className="text-2xl font-bold">Aziende e dipendenti configurati</h1>
+    <main className="bg-primary-950 min-h-screen p-5 text-white">
+      <h1 className="text-2xl font-bold">Aziende e dipendenti</h1>
       <div>
         <div className="my-4">
           <Button onClick={openFile}>
-            Clicca per importare un file (formato CSV)
+            Importa file dei dipendenti (formato CSV)
           </Button>
         </div>
         {hasCompanies && (
@@ -71,6 +84,7 @@ const Companies: React.FC = () => {
                       <th className="border-b p-2 text-left">Identificativo</th>
                       <th className="border-b p-2 text-left">Nome</th>
                       <th className="border-b p-2 text-left">Cognome</th>
+                      <th className="border-b p-2 text-left">Codice fiscale</th>
                       <th className="border-b p-2 text-left">
                         Data di assunzione
                       </th>
@@ -78,7 +92,7 @@ const Companies: React.FC = () => {
                         Data di cessazione
                       </th>
                       <th className="border-b p-2 text-left">
-                        Ore settimanali
+                        Ore settimanali (default {appConfig.defaultWeeklyHours})
                       </th>
                     </tr>
                   </thead>
@@ -93,13 +107,17 @@ const Companies: React.FC = () => {
                           {config[azienda].dipendenti[id].cognome}
                         </td>
                         <td className="border-b p-2">
+                          {config[azienda].dipendenti[id].codiceFiscale}
+                        </td>
+                        <td className="border-b p-2">
                           {config[azienda].dipendenti[id].dataAssunzione}
                         </td>
                         <td className="border-b p-2">
                           {config[azienda].dipendenti[id].dataCessazione}
                         </td>
-                        <td className="border-b p-2">
-                          {config[azienda].dipendenti[id].oreSettimanali}
+                        <td className="border-b p-2 text-center">
+                          {config[azienda].dipendenti[id].oreSettimanali ??
+                            appConfig.defaultWeeklyHours}
                         </td>
                       </tr>
                     ))}
@@ -109,7 +127,11 @@ const Companies: React.FC = () => {
             ))}
           </>
         )}
-        <Button onClick={resetConfig}>Ripristina configurazione</Button>
+        {hasCompanies && (
+          <Button variant="danger" onClick={handleResetConfig}>
+            Ripristina configurazione
+          </Button>
+        )}
       </div>
     </main>
   );

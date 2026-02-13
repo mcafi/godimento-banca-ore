@@ -306,7 +306,7 @@ const File: React.FC = () => {
   }, []);
 
   return (
-    <main className="bg-primary-950 min-h-screen p-4 text-white">
+    <main className="bg-primary-950 min-h-screen p-5 text-white">
       <div className="flex flex-col items-start justify-center h-full">
         <h1 className="text-2xl mb-4">Elaborazione godimento banca ore</h1>
         <div className="mb-4">
