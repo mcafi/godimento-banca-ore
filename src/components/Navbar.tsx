@@ -1,71 +1,49 @@
-import { OutlineHome } from "@/icons/OutlineHome";
-import { OutlineSettings } from "@/icons/OutlineSettings";
+import type { ReactNode } from "react";
 import clsx from "clsx";
-import { useTranslation } from "react-i18next";
 import { NavLink } from "react-router";
-import { Tooltip } from "@material-tailwind/react";
+import { useTranslation } from "react-i18next";
+
+import { Tooltip } from "@/components/Tooltip";
 import { BaselineHistory } from "@/icons/BaselineHistory";
+import { OutlineHome } from "@/icons/OutlineHome";
 import { OutlinePeople } from "@/icons/OutlinePeople";
+import { OutlineSettings } from "@/icons/OutlineSettings";
 
 const Navbar: React.FC = () => {
   const { t } = useTranslation();
+
+  const mainLinks: { to: string; label: string; icon: ReactNode }[] = [
+    { to: "/", label: t("title"), icon: <OutlineHome className="size-8" /> },
+    {
+      to: "/file-history",
+      label: t("file_history"),
+      icon: <BaselineHistory className="size-8" />,
+    },
+    {
+      to: "/companies",
+      label: t("companies"),
+      icon: <OutlinePeople className="size-8" />,
+    },
+  ];
+
   return (
     <nav className="flex flex-col items-center justify-between p-4 bg-primary-800 text-white">
       <div className="flex flex-col gap-3">
-        <Tooltip
-          placement="right"
-          className="bg-primary-400 ml-5"
-          content={t("title")}
-        >
-          <NavLink
-            to="/"
-            className={({ isActive }) =>
-              clsx("text-primary-400", { "text-white": isActive })
-            }
-            data-tooltip-target="tooltip"
-          >
-            <OutlineHome className="size-8" />
-          </NavLink>
-        </Tooltip>
-        <Tooltip
-          placement="right"
-          className="bg-primary-400 ml-5"
-          content={t("file_history")}
-        >
-          <NavLink
-            to="/file-history"
-            className={({ isActive }) =>
-              clsx("text-primary-400", { "text-white": isActive })
-            }
-          >
-            <BaselineHistory className="size-8" />
-          </NavLink>
-        </Tooltip>
-        <Tooltip
-          placement="right"
-          className="bg-primary-400 ml-5"
-          content={t("companies")}
-        >
-          <NavLink
-            to="/companies"
-            className={({ isActive }) =>
-              clsx("text-primary-400", { "text-white": isActive })
-            }
-          >
-            <OutlinePeople className="size-8" />
-          </NavLink>
-        </Tooltip>
+        {mainLinks.map(({ to, label, icon }) => (
+          <Tooltip key={to} label={label}>
+            <NavLink
+              to={to}
+              className={({ isActive }) => clsx("text-primary-400", { "text-white": isActive })}
+            >
+              {icon}
+            </NavLink>
+          </Tooltip>
+        ))}
       </div>
-      <Tooltip
-        placement="right"
-        className="bg-primary-400 ml-5"
-        content={t("settings")}
-      >
+      <Tooltip label={t("settings")}>
         <NavLink
           to="/settings"
-          className={({ isActive }) =>
-            clsx("text-primary-400", { "text-white": isActive })
-          }
+          className={({ isActive }) => clsx("text-primary-400", { "text-white": isActive })}
         >
           <OutlineSettings className="size-8" />
         </NavLink>

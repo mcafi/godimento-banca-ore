@@ -1,22 +1,19 @@
-import i18n from 'i18next';
-import { initReactI18next } from 'react-i18next';
+import i18n from "i18next";
+import { initReactI18next } from "react-i18next";
 
-import it from './locales/it/translation.json';
+import it from "./locales/it/translation.json";
 
 const resources = {
-    it: {
-        translation: it,
-    }
-}
+  it: {
+    translation: it,
+  },
+};
 
-i18n
-    .use(initReactI18next)
-    .init({
-        resources,
-        fallbackLng: 'it',
-        lng: 'it',
-        debug: true,
-    });
-
+i18n.use(initReactI18next).init({
+  resources,
+  fallbackLng: "it",
+  lng: "it",
+  debug: import.meta.env.DEV,
+});
 
 export default i18n;

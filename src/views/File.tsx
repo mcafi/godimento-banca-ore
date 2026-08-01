@@ -1,42 +1,32 @@
-import { message, save } from "@tauri-apps/plugin-dialog";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { XmlFile } from "../types/XmlFile";
-import { Movimento } from "../types/Movimento";
-import { getEmptyXml } from "@utils/xmlUtils";
-import {
-  getDay,
-  parse,
-  addDays,
-  formatDate,
-  isBefore,
-  subDays,
-  getMonth,
-  addWeeks,
-  differenceInWeeks,
-  differenceInMonths,
-} from "date-fns";
-
+import { formatDate } from "date-fns";
 import { it } from "date-fns/locale/it";
-import { useAppConfig } from "@/hooks/useAppConfig";
-import { readAndParseXml, writeXmlFile } from "@/utils/fileUtils";
+import { message, save } from "@tauri-apps/plugin-dialog";
+
 import { Button } from "@/components/Button";
 import { Checkbox } from "@/components/Checkbox";
+import { useAppConfig } from "@/hooks/useAppConfig";
 import { useCompaniesFile } from "@/hooks/useCompaniesFile";
+import { useFileHistory } from "@/hooks/useRecentFiles";
+import { DipendenteConfig } from "@/types/Azienda";
+import { XmlFile } from "@/types/XmlFile";
+import { buildBancaOreFile, collectFileCodes, derivePeriod } from "@/utils/bancaOre";
+import { readAndParseXml, writeXmlFile } from "@/utils/fileUtils";
 
-const File: React.FC = () => {
+function File() {
   const [searchParams] = useSearchParams();
   const path = searchParams.get("path");
 
   const [file, setFile] = useState<XmlFile | null>(null);
-
   const [fileCodes, setFileCodes] = useState<Set<string | number>>(new Set());
+  const [selectedCodes, setSelectedCodes] = useState<Set<string | number>>(new Set());
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
-  const [selectedCodes, setSelectedCodes] = useState<Array<string | number>>(
-    [],
-  );
+  const { config, isLoading: isConfigLoading } = useAppConfig();
+  const { config: companyConfig } = useCompaniesFile();
+  const { addToFileHistory } = useFileHistory();
 
   const codiciAziende = useMemo(() => {
     const aziende = file?.Fornitura.Dipendente.map(
@@ -52,228 +42,83 @@ const File: React.FC = () => {
     return Array.from(new Set(dipendenti));
   }, [file]);
 
-  const { config } = useAppConfig();
-
-  const { config: companyConfig } = useCompaniesFile();
-
-  const loadedCompany = useMemo(() => {
-    return codiciAziende.map((codice) => companyConfig[codice])[0];
-  }, [codiciAziende, companyConfig]);
+  const loadedCompany = useMemo(
+    () =>
+      codiciAziende.map((codice) => companyConfig[codice]).find((azienda) => azienda !== undefined),
+    [codiciAziende, companyConfig],
+  );
 
   const loadedEmployees = useMemo(() => {
     if (!loadedCompany) return [];
-    return codiciDipendenti.map((codice) => loadedCompany.dipendenti[codice]);
+    return codiciDipendenti
+      .map((codice) => loadedCompany.dipendenti[codice])
+      .filter((dipendente): dipendente is DipendenteConfig => dipendente !== undefined);
   }, [codiciDipendenti, loadedCompany]);
 
-  async function readExcelFile() {
-    try {
-      const parsedFile = await readAndParseXml(path);
+  // Carica il file solo quando la configurazione è pronta, così il formato date è quello corretto.
+  useEffect(() => {
+    if (isConfigLoading || !path) return;
+    let cancelled = false;
 
-      if (!parsedFile) return;
+    async function loadFile() {
+      try {
+        const parsedFile = await readAndParseXml(path);
+        if (cancelled || !parsedFile) return;
 
-      setFile(parsedFile);
+        const period = derivePeriod(parsedFile.Fornitura.Dipendente, config.dateFormatInput);
+        if (!period) return;
 
-      const codes = new Set<string | number>();
+        const codes = collectFileCodes(parsedFile.Fornitura.Dipendente);
 
-      let actualStartDate: Date | null = null;
-
-      parsedFile.Fornitura.Dipendente.forEach((dipendente) => {
-        if (
-          dipendente.Movimenti.Movimento &&
-          dipendente.Movimenti.Movimento.length > 0
-        ) {
-          const date = parse(
-            dipendente.Movimenti.Movimento[0].Data,
-            config.dateFormatInput,
-            new Date(),
-          );
-
-          if (!actualStartDate || isBefore(date, actualStartDate)) {
-            actualStartDate = date;
-          }
+        setFile(parsedFile);
+        setFileCodes(codes);
+        setSelectedCodes(codes);
+        setStartDate(period.startDate);
+        setEndDate(period.endDate);
+      } catch (error) {
+        console.error("Errore durante la lettura del file XML: ", error);
+        if (!cancelled) {
+          await message("Impossibile leggere il file XML selezionato.", {
+            title: "Errore",
+            kind: "error",
+          });
         }
-
-        dipendente.Movimenti.Movimento?.forEach((movimento) => {
-          codes.add(movimento.CodGiustificativoUfficiale);
-        });
-      });
-
-      if (!actualStartDate) return;
-
-      const mondayStartDate = subDays(
-        actualStartDate,
-        getDay(actualStartDate) - 1,
-      );
-
-      setStartDate(mondayStartDate);
-
-      let endDate = mondayStartDate;
-
-      while (
-        getMonth(endDate) === getMonth(mondayStartDate) ||
-        differenceInMonths(endDate, actualStartDate) < 1
-      ) {
-        endDate = addWeeks(endDate, 1);
       }
-
-      setEndDate(endDate);
-
-      setFileCodes(codes);
-      setSelectedCodes(Array.from(codes));
-
-      if (!startDate) return;
-    } catch (error) {
-      console.error("Errore durante la lettura del file Excel: ", error);
     }
-  }
 
-  function calculateBancaOre() {
-    const newCode = config.codeBancaOre;
-    const numberOfDipendenti = file?.Fornitura.Dipendente.length ?? 0;
+    void loadFile();
+    return () => {
+      cancelled = true;
+    };
+  }, [path, isConfigLoading, config.dateFormatInput]);
 
-    const newFile = getEmptyXml();
-    newFile.Fornitura.Dipendente = [];
-
-    for (let i = 0; i < numberOfDipendenti; i++) {
-      if (!startDate || !endDate) continue;
-
-      const dipendente = file?.Fornitura.Dipendente[i];
-
-      if (!dipendente) continue;
-
-      const codAziendaUfficiale = dipendente["@_CodAziendaUfficiale"];
-      const codDipendenteUfficiale = dipendente["@_CodDipendenteUfficiale"];
-
-      const hiringDay =
-        companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
-          ?.dataAssunzione ?? "01/01/2000";
-
-      const hiringDate = parse(hiringDay, "dd/MM/yyyy", new Date());
-
-      const terminationDay =
-        companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
-          ?.dataCessazione;
-
-      const terminationDate = terminationDay
-        ? parse(terminationDay, "dd/MM/yyyy", new Date())
-        : null;
-
-      const weeklyHours =
-        companyConfig[codAziendaUfficiale]?.dipendenti[codDipendenteUfficiale]
-          ?.oreSettimanali ?? config.defaultWeeklyHours;
-      const weeklyMinutes = weeklyHours * 60;
-
-      const movimenti = dipendente?.Movimenti.Movimento;
-
-      if (!movimenti) continue;
-
-      const newMovimenti: Movimento[] = [];
-
-      let currentStartDate: Date = startDate;
-
-      let weeksInterval = differenceInWeeks(endDate, startDate);
-
-      const month = Array.from({ length: weeksInterval }, () =>
-        new Array(7).fill(0),
-      );
-
-      movimenti.forEach((movimento) => {
-        const date = parse(movimento.Data, config.dateFormatInput, new Date());
-        const day = getDay(date);
-
-        if (!currentStartDate) return;
-
-        if (isBefore(date, hiringDate)) {
-          return;
-        }
-
-        if (terminationDate && !isBefore(date, terminationDate)) {
-          return;
-        }
-
-        const weeksDifference = differenceInWeeks(date, startDate);
-
-        if (selectedCodes.includes(movimento.CodGiustificativoUfficiale)) {
-          month[weeksDifference][day] += movimento.NumOre * 60;
-          if (movimento.NumMinuti) {
-            month[weeksDifference][day] += movimento.NumMinuti;
-          }
-        }
-      });
-
-      month.forEach((week, index) => {
-        for (let k = 0; k < 7; k++) {
-          const currentDate = addDays(currentStartDate, index * 7 + k - 1);
-
-          if (isBefore(currentDate, hiringDate)) {
-            continue;
-          }
-
-          if (terminationDate && !isBefore(currentDate, terminationDate)) {
-            continue;
-          }
-
-          let dayIndex = k + 1;
-          if (dayIndex == 7) dayIndex = 0; // Adjust for Sunday
-
-          const reminder =
-            weeklyMinutes - week.reduce((acc, curr) => acc + curr, 0);
-
-          const dailyHours = weeklyMinutes / 5;
-
-          const minutesToAdd =
-            reminder <= 0
-              ? 0
-              : Math.min(
-                  Math.max(dailyHours - week[dayIndex], 0),
-                  Math.max(reminder, 0),
-                );
-
-          week[dayIndex] += minutesToAdd;
-
-          if (!config.includeZeroDays && minutesToAdd <= 0) continue;
-
-          const hours = Math.floor(minutesToAdd / 60);
-          const minutes = minutesToAdd % 60;
-
-          const newMovimento: Movimento = {
-            CodGiustificativoUfficiale: newCode,
-            Data: formatDate(addDays(currentDate, 1), config.dateFormatOutput),
-            NumOre: hours,
-            GiornoDiRiposo: "N",
-            GiornoChiusuraStraordinari: "N",
-          };
-
-          if (minutes > 0) {
-            newMovimento.NumMinuti = minutes;
-          }
-
-          newMovimenti.push(newMovimento);
-        }
-      });
-
-      if (newMovimenti.length === 0) continue;
-
-      newFile.Fornitura.Dipendente.push({
-        Movimenti: {
-          "@_GenerazioneAutomaticaDaTeorico": "N",
-          Movimento: newMovimenti,
-        },
-        "@_CodAziendaUfficiale": `${codAziendaUfficiale}`,
-        "@_CodDipendenteUfficiale": `${codDipendenteUfficiale}`,
-      });
-    }
-    return newFile;
+  function toggleCode(code: string | number) {
+    setSelectedCodes((prev) => {
+      const next = new Set(prev);
+      if (next.has(code)) {
+        next.delete(code);
+      } else {
+        next.add(code);
+      }
+      return next;
+    });
   }
 
   async function saveXmlFile() {
-    try {
-      const fullPath = `${path}`;
+    if (!file || !startDate || !endDate) return;
 
-      const fileToWrite = calculateBancaOre();
+    try {
+      const fileToWrite = buildBancaOreFile({
+        file,
+        startDate,
+        endDate,
+        selectedCodes,
+        config,
+        companyConfig,
+      });
 
       const savePath = await save({
-        defaultPath: fullPath.replace(".xml", "-new.xml"),
+        defaultPath: path?.replace(".xml", "-new.xml"),
         filters: [
           {
             name: "File xml",
@@ -284,29 +129,24 @@ const File: React.FC = () => {
 
       if (!savePath) return;
 
-      // Salva il nuovo XML nel file
       await writeXmlFile(savePath, fileToWrite);
-
-      message("File salvato con successo.", {
+      await message("File salvato con successo.", {
         title: "Successo",
         kind: "info",
       });
+
+      if (path) await addToFileHistory(path);
     } catch (error) {
       console.error("Errore durante il salvataggio del file XML: ", error);
-      message("Errore durante il salvataggio del file XML.", {
+      await message("Errore durante il salvataggio del file XML.", {
         title: "Errore",
         kind: "error",
       });
     }
   }
 
-  useEffect(() => {
-    setStartDate(null);
-    readExcelFile();
-  }, []);
-
   return (
-    <main className="bg-primary-950 min-h-screen p-5 text-white">
+    <main className="bg-primary-950 min-h-screen p-8 text-white">
       <div className="flex flex-col items-start justify-center h-full">
         <h1 className="text-2xl mb-4">Elaborazione godimento banca ore</h1>
         <div className="mb-4">
@@ -317,68 +157,49 @@ const File: React.FC = () => {
           <h2 className="text-lg mb-2">Dettagli</h2>
           {startDate && (
             <p className="mb-2">
-              Data di inizio:{" "}
-              {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })}{" "}
-              (compreso)
+              Data di inizio: {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })} (compreso)
             </p>
           )}
           {endDate && (
             <p className="mb-2">
-              Data di fine:{" "}
-              {formatDate(endDate, "EEEE d MMMM yyyy", { locale: it })}{" "}
-              (escluso)
+              Data di fine: {formatDate(endDate, "EEEE d MMMM yyyy", { locale: it })} (escluso)
             </p>
           )}
-          {loadedCompany && (
-            <div>
-              <p className="mb-2">Aziende: {loadedCompany.denominazione}</p>
-            </div>
-          )}
-          {codiciDipendenti && (
-            <div>
-              <p className="mb-2">
-                Dipendenti:{" "}
-                {loadedEmployees
-                  .map(
-                    (dipendente) =>
-                      dipendente &&
-                      `${dipendente.nome} ${dipendente.cognome} (${dipendente.codiceFiscale})`,
-                  )
-                  .join(", ")}
-              </p>
-            </div>
-          )}
-          <div>
+          {loadedCompany && <p className="mb-2">Aziende: {loadedCompany.denominazione}</p>}
+          {loadedEmployees.length > 0 && (
             <p className="mb-2">
-              Codici ore: {Array.from(fileCodes).join(", ")}
+              Dipendenti:{" "}
+              {loadedEmployees
+                .map(
+                  (dipendente) =>
+                    `${dipendente.nome} ${dipendente.cognome} (${dipendente.codiceFiscale})`,
+                )
+                .join(", ")}
             </p>
-          </div>
+          )}
+          <p className="mb-2">Codici ore: {Array.from(fileCodes).join(", ")}</p>
         </div>
         <div className="mb-4">
           <h2 className="text-lg mb-2">Opzioni</h2>
           <p>Codice banca ore: {config.codeBancaOre}</p>
           <p className="mb-2">Codici da includere nel calcolo:</p>
           <div className="flex flex-col gap-1">
-            {Array.from(fileCodes).map((code, index) => (
+            {Array.from(fileCodes).map((code) => (
               <Checkbox
-                key={index}
+                key={code.toString()}
                 id={`checkbox-${code.toString()}`}
                 name={`checkbox-${code.toString()}`}
                 label={code}
-                checked={selectedCodes.includes(code)}
-                onChange={(e) => {
-                  if (e.target.checked) {
-                    setSelectedCodes([...selectedCodes, code]);
-                  } else {
-                    setSelectedCodes(selectedCodes.filter((c) => c !== code));
-                  }
-                }}
+                checked={selectedCodes.has(code)}
+                onChange={() => toggleCode(code)}
               />
             ))}
           </div>
         </div>
         <div className="flex gap-4">
-          <Button onClick={saveXmlFile}>Salva file XML</Button>
+          <Button onClick={saveXmlFile} disabled={!file || !startDate || !endDate}>
+            Salva file XML
+          </Button>
           <Link to="/">
             <Button variant="secondary">Chiudi</Button>
           </Link>
@@ -386,6 +207,6 @@ const File: React.FC = () => {
       </div>
     </main>
   );
-};
+}
 
 export default File;

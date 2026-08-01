@@ -6,11 +6,7 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   children: React.ReactNode;
 };
 
-export const Button: React.FC<ButtonProps> = ({
-  children,
-  variant = "primary",
-  ...props
-}) => {
+export const Button: React.FC<ButtonProps> = ({ children, variant = "primary", ...props }) => {
   const buttonClass =
     variant === "primary"
       ? "bg-primary-600"

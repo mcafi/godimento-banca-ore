@@ -5,13 +5,13 @@ import Papa from "papaparse";
 import { readTextFile } from "@tauri-apps/plugin-fs";
 import { useCompaniesFile } from "@/hooks/useCompaniesFile";
 import { CompanyCSVEntry } from "@/types/CompanyCSVEntry";
-import { useMemo } from "react";
-
 import { useAppConfig } from "@/hooks/useAppConfig";
 
 const Companies: React.FC = () => {
   const { config, patchConfig, resetConfig } = useCompaniesFile();
   const { config: appConfig } = useAppConfig();
+
+  const hasCompanies = Object.keys(config).length > 0;
 
   async function openFile() {
     const selectedFile = await open({
@@ -44,10 +44,6 @@ const Companies: React.FC = () => {
     patchConfig(parsed.data as CompanyCSVEntry[], appConfig.defaultWeeklyHours);
   }
 
-  const hasCompanies = useMemo(() => {
-    return Object.keys(config).length > 0;
-  }, [config]);
-
   async function handleResetConfig() {
     const confirmed = await ask(
       "Sei sicuro di voler ripristinare la configurazione delle aziende?",
@@ -62,22 +58,18 @@ const Companies: React.FC = () => {
   }
 
   return (
-    <main className="bg-primary-950 min-h-screen p-5 text-white">
+    <main className="bg-primary-950 min-h-screen p-8 text-white">
       <h1 className="text-2xl font-bold">Aziende e dipendenti</h1>
       <div>
         <div className="my-4">
-          <Button onClick={openFile}>
-            Importa file dei dipendenti (formato CSV)
-          </Button>
+          <Button onClick={openFile}>Importa file dei dipendenti (formato CSV)</Button>
         </div>
         {hasCompanies && (
           <>
             <h2 className="text-xl font-bold">Elenco aziende</h2>
-            {Object.keys(config).map((azienda) => (
-              <div key={azienda}>
-                <h3 className="text-lg font-semibold">
-                  {config[azienda].denominazione}
-                </h3>
+            {Object.entries(config).map(([codice, azienda]) => (
+              <div key={codice}>
+                <h3 className="text-lg font-semibold">{azienda.denominazione}</h3>
                 <table className="min-w-full table-auto border border-gray-300 my-2">
                   <thead>
                     <tr>
@@ -85,39 +77,24 @@ const Companies: React.FC = () => {
                       <th className="border-b p-2 text-left">Nome</th>
                       <th className="border-b p-2 text-left">Cognome</th>
                       <th className="border-b p-2 text-left">Codice fiscale</th>
-                      <th className="border-b p-2 text-left">
-                        Data di assunzione
-                      </th>
-                      <th className="border-b p-2 text-left">
-                        Data di cessazione
-                      </th>
+                      <th className="border-b p-2 text-left">Data di assunzione</th>
+                      <th className="border-b p-2 text-left">Data di cessazione</th>
                       <th className="border-b p-2 text-left">
                         Ore settimanali (default {appConfig.defaultWeeklyHours})
                       </th>
                     </tr>
                   </thead>
                   <tbody>
-                    {Object.keys(config[azienda].dipendenti).map((id) => (
+                    {Object.entries(azienda.dipendenti).map(([id, dipendente]) => (
                       <tr key={id}>
                         <td className="border-b p-2">{id}</td>
-                        <td className="border-b p-2">
-                          {config[azienda].dipendenti[id].nome}
-                        </td>
-                        <td className="border-b p-2">
-                          {config[azienda].dipendenti[id].cognome}
-                        </td>
-                        <td className="border-b p-2">
-                          {config[azienda].dipendenti[id].codiceFiscale}
-                        </td>
-                        <td className="border-b p-2">
-                          {config[azienda].dipendenti[id].dataAssunzione}
-                        </td>
-                        <td className="border-b p-2">
-                          {config[azienda].dipendenti[id].dataCessazione}
-                        </td>
+                        <td className="border-b p-2">{dipendente.nome}</td>
+                        <td className="border-b p-2">{dipendente.cognome}</td>
+                        <td className="border-b p-2">{dipendente.codiceFiscale}</td>
+                        <td className="border-b p-2">{dipendente.dataAssunzione}</td>
+                        <td className="border-b p-2">{dipendente.dataCessazione}</td>
                         <td className="border-b p-2 text-center">
-                          {config[azienda].dipendenti[id].oreSettimanali ??
-                            appConfig.defaultWeeklyHours}
+                          {dipendente.oreSettimanali ?? appConfig.defaultWeeklyHours}
                         </td>
                       </tr>
                     ))}

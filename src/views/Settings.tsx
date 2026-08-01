@@ -6,6 +6,8 @@ import { getName, getVersion } from "@tauri-apps/api/app";
 import { useTranslation } from "react-i18next";
 import { ask } from "@tauri-apps/plugin-dialog";
 
+const appInfoPromise = Promise.all([getName(), getVersion()]);
+
 const Settings: React.FC = () => {
   const { config, updateConfig, resetConfig, saveConfig } = useAppConfig();
 
@@ -15,21 +17,21 @@ const Settings: React.FC = () => {
   const [version, setVersion] = useState<string>("");
 
   useEffect(() => {
-    async function fetchAppInfo() {
-      try {
-        const name = await getName();
-        const ver = await getVersion();
+    let cancelled = false;
+
+    appInfoPromise
+      .then(([name, ver]) => {
+        if (cancelled) return;
         setAppName(name);
         setVersion(ver);
-      } catch (error) {
-        console.error(
-          "Errore durante il recupero delle informazioni dell'app:",
-          error,
-        );
-      }
-    }
+      })
+      .catch((error) => {
+        console.error("Errore durante il recupero delle informazioni dell'app:", error);
+      });
 
-    fetchAppInfo();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   async function handleResetConfig() {
@@ -46,7 +48,7 @@ const Settings: React.FC = () => {
   }
 
   return (
-    <main className="bg-primary-950 min-h-screen p-5 text-white">
+    <main className="bg-primary-950 min-h-screen p-8 text-white">
       <h1 className="text-2xl font-bold mb-4">{t("settings")}</h1>
       <div className="flex flex-col gap-4 items-start">
         <div className="">
@@ -69,13 +71,9 @@ const Settings: React.FC = () => {
             type="checkbox"
             title="useSameFormatAsInput"
             checked={config.useSameFormatAsInput}
-            onChange={(e) =>
-              updateConfig({ useSameFormatAsInput: e.target.checked })
-            }
+            onChange={(e) => updateConfig({ useSameFormatAsInput: e.target.checked })}
           />
-          <label htmlFor="useSameFormatAsInput">
-            Usa lo stesso formato di input per l'output
-          </label>
+          <label htmlFor="useSameFormatAsInput">Usa lo stesso formato di input per l'output</label>
         </div>
         <div className="">
           <label htmlFor="outputDateFormat">Formato data output</label>
@@ -112,16 +110,13 @@ const Settings: React.FC = () => {
             type="checkbox"
             title="includeZeroDays"
             checked={config.includeZeroDays}
-            onChange={(e) =>
-              updateConfig({ includeZeroDays: e.target.checked })
-            }
+            onChange={(e) => updateConfig({ includeZeroDays: e.target.checked })}
           />
           <label htmlFor="includeZeroDays">Includi giorni a zero ore</label>
         </div>
         <div className="">
           <label htmlFor="defaultWeeklyHours">
-            Ore settimanali di default (usate in assenza di specifiche per i
-            dipendenti)
+            Ore settimanali di default (usate in assenza di specifiche per i dipendenti)
           </label>
           <input
             id="defaultWeeklyHours"
@@ -130,9 +125,7 @@ const Settings: React.FC = () => {
             type="text"
             title="defaultWeeklyHours"
             value={config.defaultWeeklyHours}
-            onChange={(e) =>
-              updateConfig({ defaultWeeklyHours: Number(e.target.value) })
-            }
+            onChange={(e) => updateConfig({ defaultWeeklyHours: Number(e.target.value) })}
           />
         </div>
         <div className=" flex gap-4">

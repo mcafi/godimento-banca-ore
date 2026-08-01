@@ -1,151 +1,54 @@
-import { useState, useEffect } from 'react';
-import { readTextFile, writeTextFile, exists, mkdir } from "@tauri-apps/plugin-fs";
+import { useCallback } from "react";
 import { message } from "@tauri-apps/plugin-dialog";
-import { appLocalDataDir, join } from "@tauri-apps/api/path";
-import { AppConfig } from '@/types/AppConfig';
+import { usePersistedJsonFile } from "@/hooks/usePersistedJsonFile";
+import { AppConfig } from "@/types/AppConfig";
 
 const defaultConfig: AppConfig = {
-    dateFormatInput: "yyyy-MM-dd",
-    dateFormatOutput: "yyyy-MM-dd",
-    useSameFormatAsInput: true,
-    codeBancaOre: "BO",
-    includeZeroDays: false,
-    defaultWeeklyHours: 40,
+  dateFormatInput: "yyyy-MM-dd",
+  dateFormatOutput: "yyyy-MM-dd",
+  useSameFormatAsInput: true,
+  codeBancaOre: "BO",
+  includeZeroDays: false,
+  defaultWeeklyHours: 40,
 };
 
 export function useAppConfig() {
-    const [config, setConfig] = useState<AppConfig>(defaultConfig);
-    const [configPath, setConfigPath] = useState<string | null>(null);
-    const [isLoading, setIsLoading] = useState<boolean>(true);
-    const [error, setError] = useState<string | null>(null);
+  const {
+    data: config,
+    update,
+    save,
+    reset,
+    isLoading,
+    error,
+  } = usePersistedJsonFile<AppConfig>({
+    fileName: "config.json",
+    defaultData: defaultConfig,
+  });
 
-    // Inizializza il percorso del file di configurazione e carica la configurazione all'avvio
-    useEffect(() => {
-        async function initConfig() {
-            try {
-                const appDataDir = await appLocalDataDir();
+  const updateConfig = useCallback(
+    (newConfig: Partial<AppConfig>) => {
+      update((prev) => ({ ...prev, ...newConfig }));
+    },
+    [update],
+  );
 
-                // Crea la directory se non esiste
-                if (!(await exists(appDataDir))) {
-                    await mkdir(appDataDir, { recursive: true });
-                }
-
-                const configFilePath = await join(appDataDir, "config.json");
-                setConfigPath(configFilePath);
-
-                const fileExists = await exists(configFilePath);
-
-                if (fileExists) {
-                    await loadConfig(configFilePath);
-                } else {
-                    await writeTextFile(configFilePath, JSON.stringify(defaultConfig, null, 2));
-                    setConfig(defaultConfig);
-                    setIsLoading(false);
-                }
-            } catch (err) {
-                setError(`Errore durante l'inizializzazione della configurazione: ${err}`);
-                setIsLoading(false);
-            }
-        }
-
-        initConfig();
-    }, []);
-
-    // Carica la configurazione dal file
-    async function loadConfig(path: string) {
-        try {
-            setIsLoading(true);
-            setError(null);
-
-            const configContent = await readTextFile(path);
-            const parsedConfig = JSON.parse(configContent);
-
-            // Verifica che la configurazione sia valida e integra i valori di default
-            const validatedConfig = {
-                ...defaultConfig,
-                ...parsedConfig
-            };
-
-            setConfig(validatedConfig);
-        } catch (err) {
-            setError(`Errore durante il caricamento della configurazione: ${err}`);
-            await message(`Errore durante il caricamento della configurazione: ${err}`, {
-                title: "Errore",
-                kind: "error",
-            });
-
-            // In caso di errore, usa la configurazione predefinita
-            setConfig(defaultConfig);
-        } finally {
-            setIsLoading(false);
-        }
+  const saveConfig = useCallback(async () => {
+    if (await save()) {
+      await message("Configurazione salvata con successo", {
+        title: "Successo",
+        kind: "info",
+      });
     }
+  }, [save]);
 
-    // Salva la configurazione nel file
-    async function saveConfig() {
-        if (!configPath) return;
-
-        try {
-            setIsLoading(true);
-            setError(null);
-
-            const configString = JSON.stringify(config, null, 2);
-            await writeTextFile(configPath, configString);
-
-            await message("Configurazione salvata con successo", {
-                title: "Successo",
-                kind: "info",
-            });
-        } catch (err) {
-            setError(`Errore durante il salvataggio della configurazione: ${err}`);
-            await message(`Errore durante il salvataggio della configurazione: ${err}`, {
-                title: "Errore",
-                kind: "error",
-            });
-        } finally {
-            setIsLoading(false);
-        }
+  const resetConfig = useCallback(async () => {
+    if (await reset()) {
+      await message("Configurazione ripristinata ai valori predefiniti", {
+        title: "Successo",
+        kind: "info",
+      });
     }
+  }, [reset]);
 
-    // Aggiorna la configurazione in memoria
-    function updateConfig(newConfig: Partial<AppConfig>) {
-        setConfig({ ...config, ...newConfig });
-    }
-
-    // Ripristina la configurazione ai valori predefiniti
-    async function resetConfig() {
-        try {
-            setIsLoading(true);
-            setError(null);
-
-            if (!configPath) return;
-
-            setConfig(defaultConfig);
-            const configString = JSON.stringify(defaultConfig, null, 2);
-            await writeTextFile(configPath, configString);
-
-            await message("Configurazione ripristinata ai valori predefiniti", {
-                title: "Successo",
-                kind: "info",
-            });
-        } catch (err) {
-            setError(`Errore durante il ripristino della configurazione: ${err}`);
-            await message(`Errore durante il ripristino della configurazione: ${err}`, {
-                title: "Errore",
-                kind: "error",
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    }
-
-    return {
-        config,
-        updateConfig,
-        saveConfig,
-        resetConfig,
-        configPath,
-        isLoading,
-        error
-    };
+  return { config, updateConfig, saveConfig, resetConfig, isLoading, error };
 }

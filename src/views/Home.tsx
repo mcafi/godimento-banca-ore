@@ -5,7 +5,7 @@ import { Button } from "../components/Button";
 import { useTranslation } from "react-i18next";
 
 function Home() {
-  let navigate = useNavigate();
+  const navigate = useNavigate();
 
   const { t } = useTranslation();
 
@@ -31,11 +31,11 @@ function Home() {
       return;
     }
 
-    navigate(`/file?path=${selectedFile}`);
+    navigate(`/file?path=${encodeURIComponent(selectedFile)}`);
   }
 
   return (
-    <main className="bg-primary-950 min-h-screen p-5">
+    <main className="bg-primary-950 min-h-screen p-8">
       <div className="flex flex-col items-center justify-center h-full py-10 gap-5">
         <Button onClick={openFile}>{t("home.select_file")}</Button>
       </div>
