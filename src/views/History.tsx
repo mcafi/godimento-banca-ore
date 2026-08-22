@@ -1,12 +1,12 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router";
+import { Link } from "react-router";
 import { useTranslation } from "react-i18next";
 import { ask } from "@tauri-apps/plugin-dialog";
 import { useFileHistory } from "@/hooks/useRecentFiles";
+import { Button } from "@/components/Button";
 
 const FileHistory: React.FC = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
   const { fileHistory, clearHistory, checkAllFilesExist, existsMap, isLoading } = useFileHistory();
 
   useEffect(() => {
@@ -16,10 +16,6 @@ const FileHistory: React.FC = () => {
   }, [isLoading, checkAllFilesExist]);
 
   const hasHistory = fileHistory.history.length > 0;
-
-  function handleOpenFile(filePath: string) {
-    navigate(`/file?path=${encodeURIComponent(filePath)}`);
-  }
 
   async function handleClearHistory() {
     const confirmed = await ask("Sei sicuro di voler cancellare la cronologia?", {
@@ -35,7 +31,7 @@ const FileHistory: React.FC = () => {
     return (
       <main className="bg-primary-950 min-h-screen p-8 text-white">
         <h1 className="text-2xl font-bold mb-4">{t("file_history")}</h1>
-        <p className="text-gray-400">Caricamento...</p>
+        <p className="text-gray-400">Caricamento…</p>
       </main>
     );
   }
@@ -59,28 +55,32 @@ const FileHistory: React.FC = () => {
                 <li
                   key={index}
                   className={`
-                      flex items-center justify-between p-3 rounded-lg
-                      ${exists ? "hover:bg-primary-600 cursor-pointer" : "opacity-50"}
-                      transition-colors
-                    `}
-                  onClick={() => exists && handleOpenFile(filePath)}
+                    flex items-center justify-between p-3 rounded-lg
+                    ${exists ? "hover:bg-primary-600" : "opacity-50"}
+                    transition-colors
+                  `}
                 >
-                  <div className="flex items-center gap-3">
-                    <span title={filePath}>
+                  <Link
+                    to={`/file?path=${encodeURIComponent(filePath)}`}
+                    className="flex items-center gap-3 flex-1 min-w-0"
+                    tabIndex={exists ? 0 : -1}
+                    aria-disabled={!exists}
+                    onClick={(e) => {
+                      if (!exists) e.preventDefault();
+                    }}
+                  >
+                    <span title={filePath} className="truncate">
                       {filePath}
                     </span>
-                  </div>
+                  </Link>
                 </li>
               );
             })}
           </ul>
 
-          <button
-            onClick={handleClearHistory}
-            className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg transition-colors"
-          >
+          <Button variant="danger" onClick={handleClearHistory}>
             Cancella cronologia
-          </button>
+          </Button>
         </>
       )}
     </main>

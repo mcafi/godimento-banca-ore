@@ -87,12 +87,12 @@ const Companies: React.FC = () => {
                   <tbody>
                     {Object.entries(azienda.dipendenti).map(([id, dipendente]) => (
                       <tr key={id}>
-                        <td className="border-b p-2">{id}</td>
-                        <td className="border-b p-2">{dipendente.nome}</td>
-                        <td className="border-b p-2">{dipendente.cognome}</td>
-                        <td className="border-b p-2">{dipendente.codiceFiscale}</td>
-                        <td className="border-b p-2">{dipendente.dataAssunzione}</td>
-                        <td className="border-b p-2">{dipendente.dataCessazione}</td>
+                        <td className="border-b p-2 wrap-break-word">{id}</td>
+                        <td className="border-b p-2 wrap-break-word">{dipendente.nome}</td>
+                        <td className="border-b p-2 wrap-break-word">{dipendente.cognome}</td>
+                        <td className="border-b p-2 wrap-break-word">{dipendente.codiceFiscale}</td>
+                        <td className="border-b p-2 wrap-break-word">{dipendente.dataAssunzione}</td>
+                        <td className="border-b p-2 wrap-break-word">{dipendente.dataCessazione}</td>
                         <td className="border-b p-2 text-center">
                           {dipendente.oreSettimanali ?? appConfig.defaultWeeklyHours}
                         </td>

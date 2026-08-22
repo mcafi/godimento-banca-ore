@@ -13,16 +13,16 @@ const Navbar: React.FC = () => {
   const { t } = useTranslation();
 
   const mainLinks: { to: string; label: string; icon: ReactNode }[] = [
-    { to: "/", label: t("title"), icon: <OutlineHome className="size-8" /> },
+    { to: "/", label: t("title"), icon: <OutlineHome className="size-8" aria-hidden="true" /> },
     {
       to: "/file-history",
       label: t("file_history"),
-      icon: <BaselineHistory className="size-8" />,
+      icon: <BaselineHistory className="size-8" aria-hidden="true" />,
     },
     {
       to: "/companies",
       label: t("companies"),
-      icon: <OutlinePeople className="size-8" />,
+      icon: <OutlinePeople className="size-8" aria-hidden="true" />,
     },
   ];
 
@@ -33,6 +33,7 @@ const Navbar: React.FC = () => {
           <Tooltip key={to} label={label}>
             <NavLink
               to={to}
+              aria-label={label}
               className={({ isActive }) => clsx("text-primary-400", { "text-white": isActive })}
             >
               {icon}
@@ -43,9 +44,10 @@ const Navbar: React.FC = () => {
       <Tooltip label={t("settings")}>
         <NavLink
           to="/settings"
+          aria-label={t("settings")}
           className={({ isActive }) => clsx("text-primary-400", { "text-white": isActive })}
         >
-          <OutlineSettings className="size-8" />
+          <OutlineSettings className="size-8" aria-hidden="true" />
         </NavLink>
       </Tooltip>
     </nav>

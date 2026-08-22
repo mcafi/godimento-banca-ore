@@ -1,7 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router";
-import { formatDate } from "date-fns";
-import { it } from "date-fns/locale/it";
 import { message, save } from "@tauri-apps/plugin-dialog";
 
 import { Button } from "@/components/Button";
@@ -104,6 +102,17 @@ function File() {
     });
   }
 
+  const formatFullDate = useMemo(
+    () =>
+      new Intl.DateTimeFormat("it-IT", {
+        weekday: "long",
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    [],
+  );
+
   async function saveXmlFile() {
     if (!file || !startDate || !endDate) return;
 
@@ -150,19 +159,19 @@ function File() {
       <div className="flex flex-col items-start justify-center h-full">
         <h1 className="text-2xl mb-4">Elaborazione godimento banca ore</h1>
         <div className="mb-4">
-          <h2 className="text-lg mb-2">File selezionato: {path}</h2>
+          <h2 className="text-lg mb-2 wrap-break-word">File selezionato: {path}</h2>
         </div>
 
         <div className="mb-4">
           <h2 className="text-lg mb-2">Dettagli</h2>
           {startDate && (
             <p className="mb-2">
-              Data di inizio: {formatDate(startDate, "EEEE d MMMM yyyy", { locale: it })} (compreso)
+              Data di inizio: {formatFullDate.format(startDate)} (compreso)
             </p>
           )}
           {endDate && (
             <p className="mb-2">
-              Data di fine: {formatDate(endDate, "EEEE d MMMM yyyy", { locale: it })} (escluso)
+              Data di fine: {formatFullDate.format(endDate)} (escluso)
             </p>
           )}
           {loadedCompany && <p className="mb-2">Aziende: {loadedCompany.denominazione}</p>}

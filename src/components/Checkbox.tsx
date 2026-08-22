@@ -12,7 +12,11 @@ export const Checkbox: React.FC<CheckboxProps> = ({ label, id, className = "", .
       <input
         type="checkbox"
         id={id}
-        className={clsx("accent-primary-500 size-6 hover:cursor-pointer", className)}
+        className={clsx(
+          "accent-primary-500 size-6 hover:cursor-pointer",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-primary-950",
+          className,
+        )}
         {...props}
       />
       <label className="px-3 hover:cursor-pointer" htmlFor={id}>

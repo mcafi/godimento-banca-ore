@@ -1,10 +1,12 @@
 import { useAppConfig } from "@/hooks/useAppConfig";
 import React, { useEffect, useState } from "react";
 import clsx from "clsx";
+import { useBlocker } from "react-router";
 import { Button } from "@/components/Button";
 import { getName, getVersion } from "@tauri-apps/api/app";
 import { useTranslation } from "react-i18next";
 import { ask } from "@tauri-apps/plugin-dialog";
+import { AppConfig } from "@/types/AppConfig";
 
 const appInfoPromise = Promise.all([getName(), getVersion()]);
 
@@ -15,6 +17,9 @@ const Settings: React.FC = () => {
 
   const [appName, setAppName] = useState<string>("");
   const [version, setVersion] = useState<string>("");
+  const [isDirty, setIsDirty] = useState(false);
+
+  const blocker = useBlocker(isDirty);
 
   useEffect(() => {
     let cancelled = false;
@@ -34,6 +39,27 @@ const Settings: React.FC = () => {
     };
   }, []);
 
+  useEffect(() => {
+    if (!isDirty) return;
+
+    const handler = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+    };
+
+    window.addEventListener("beforeunload", handler);
+    return () => window.removeEventListener("beforeunload", handler);
+  }, [isDirty]);
+
+  function handleUpdateConfig(patch: Partial<AppConfig>) {
+    updateConfig(patch);
+    setIsDirty(true);
+  }
+
+  async function handleSave() {
+    await saveConfig();
+    setIsDirty(false);
+  }
+
   async function handleResetConfig() {
     const confirmed = await ask(
       "Sei sicuro di voler ripristinare le impostazioni ai valori predefiniti?",
@@ -43,7 +69,8 @@ const Settings: React.FC = () => {
       },
     );
     if (confirmed) {
-      resetConfig();
+      await resetConfig();
+      setIsDirty(false);
     }
   }
 
@@ -59,8 +86,10 @@ const Settings: React.FC = () => {
             name="inputDateFormat"
             type="text"
             title="inputDateFormat"
+            autoComplete="off"
+            spellCheck={false}
             value={config.dateFormatInput}
-            onChange={(e) => updateConfig({ dateFormatInput: e.target.value })}
+            onChange={(e) => handleUpdateConfig({ dateFormatInput: e.target.value })}
           />
         </div>
         <div className="">
@@ -71,7 +100,7 @@ const Settings: React.FC = () => {
             type="checkbox"
             title="useSameFormatAsInput"
             checked={config.useSameFormatAsInput}
-            onChange={(e) => updateConfig({ useSameFormatAsInput: e.target.checked })}
+            onChange={(e) => handleUpdateConfig({ useSameFormatAsInput: e.target.checked })}
           />
           <label htmlFor="useSameFormatAsInput">Usa lo stesso formato di input per l'output</label>
         </div>
@@ -85,9 +114,11 @@ const Settings: React.FC = () => {
             name="outputDateFormat"
             type="text"
             title="outputDateFormat"
+            autoComplete="off"
+            spellCheck={false}
             disabled={config.useSameFormatAsInput}
             value={config.dateFormatOutput}
-            onChange={(e) => updateConfig({ dateFormatOutput: e.target.value })}
+            onChange={(e) => handleUpdateConfig({ dateFormatOutput: e.target.value })}
           />
         </div>
         <div className="">
@@ -98,8 +129,10 @@ const Settings: React.FC = () => {
             name="codeBancaOre"
             type="text"
             title="codeBancaOre"
+            autoComplete="off"
+            spellCheck={false}
             value={config.codeBancaOre}
-            onChange={(e) => updateConfig({ codeBancaOre: e.target.value })}
+            onChange={(e) => handleUpdateConfig({ codeBancaOre: e.target.value })}
           />
         </div>
         <div className="">
@@ -110,7 +143,7 @@ const Settings: React.FC = () => {
             type="checkbox"
             title="includeZeroDays"
             checked={config.includeZeroDays}
-            onChange={(e) => updateConfig({ includeZeroDays: e.target.checked })}
+            onChange={(e) => handleUpdateConfig({ includeZeroDays: e.target.checked })}
           />
           <label htmlFor="includeZeroDays">Includi giorni a zero ore</label>
         </div>
@@ -122,14 +155,16 @@ const Settings: React.FC = () => {
             id="defaultWeeklyHours"
             className="block bg-neutral-800 text-white p-2 rounded-lg"
             name="defaultWeeklyHours"
-            type="text"
+            type="number"
+            min="0"
             title="defaultWeeklyHours"
+            autoComplete="off"
             value={config.defaultWeeklyHours}
-            onChange={(e) => updateConfig({ defaultWeeklyHours: Number(e.target.value) })}
+            onChange={(e) => handleUpdateConfig({ defaultWeeklyHours: Number(e.target.value) })}
           />
         </div>
         <div className=" flex gap-4">
-          <Button onClick={saveConfig}>Salva</Button>
+          <Button onClick={handleSave}>Salva</Button>
           <Button variant="danger" onClick={handleResetConfig}>
             Resetta
           </Button>
@@ -141,6 +176,22 @@ const Settings: React.FC = () => {
           {appName} - Versione {version}
         </p>
       </div>
+
+      {blocker.state === "blocked" && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="rounded-lg bg-neutral-900 p-6 text-white">
+            <p className="mb-4">Hai modifiche non salvate. Vuoi uscire senza salvare?</p>
+            <div className="flex gap-4">
+              <Button variant="danger" onClick={() => blocker.proceed()}>
+                Esci senza salvare
+              </Button>
+              <Button variant="secondary" onClick={() => blocker.reset()}>
+                Annulla
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };
